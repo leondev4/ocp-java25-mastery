@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>☕ Java Internals Visualizer — by Yassin Ghariani (JavaBoy)</title>
+<style>
+  :root{--bg:#0b0f17;--panel:#111827;--panel2:#0d1522;--line:#233046;--txt:#e6edf7;--dim:#8b98ad;
+    --blue:#4da3ff;--green:#37c871;--amber:#ffb84d;--pink:#ff6b8f;--purple:#b48cff;
+    --mono:'JetBrains Mono','Fira Code',Consolas,monospace}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;padding-bottom:50px}
+  header{padding:20px 28px 10px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  header h1{font-size:1.35rem}
+  header .brand{color:var(--dim);font-size:.85rem}
+  header .brand b{color:var(--amber)}
+  nav{display:flex;gap:8px;padding:10px 28px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  nav button{background:var(--panel);border:1px solid var(--line);color:var(--dim);padding:9px 16px;border-radius:10px 10px 0 0;cursor:pointer;font-size:.92rem}
+  nav button.active{color:var(--txt);border-color:var(--blue);background:var(--panel2);box-shadow:0 -2px 0 var(--blue) inset}
+  .tab{display:none;padding:20px 28px}
+  .tab.active{display:block}
+  .layout{display:grid;grid-template-columns:minmax(320px,1fr) minmax(460px,1.4fr);gap:18px;align-items:start}
+  @media(max-width:900px){.layout{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .card h3{padding:10px 16px;border-bottom:1px solid var(--line);font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+  pre.code{font-family:var(--mono);font-size:.85rem;line-height:1.85;padding:14px 0;overflow-x:auto}
+  pre.code .ln{display:block;padding:0 16px 0 44px;position:relative;white-space:pre}
+  pre.code .ln::before{content:attr(data-n);position:absolute;left:12px;color:#3d4a61;font-size:.75rem;top:3px}
+  pre.code .ln.hl{background:linear-gradient(90deg,rgba(77,163,255,.22),transparent);border-left:3px solid var(--blue)}
+  .kw{color:var(--purple)}.st{color:var(--green)}.cm{color:#586a85}.nu{color:var(--amber)}.fn{color:var(--blue)}
+  .controls{display:flex;gap:10px;align-items:center;padding:14px 16px;border-top:1px solid var(--line);flex-wrap:wrap}
+  .controls button{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:8px 16px;border-radius:9px;cursor:pointer;font-size:.9rem}
+  .controls button:hover{border-color:var(--blue)}
+  .controls button.primary{background:var(--blue);border-color:var(--blue);color:#04101f;font-weight:700}
+  .controls .step-ind{margin-left:auto;color:var(--dim);font-size:.85rem;font-family:var(--mono)}
+  .narr{padding:13px 16px;font-size:.93rem;min-height:64px;border-top:1px solid var(--line);background:var(--panel2)}
+  .narr b{color:var(--amber)}
+  .stage{padding:16px;min-height:420px;position:relative}
+  .quiznote{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:10px;padding:12px 16px;font-size:.9rem;color:var(--dim)}
+  .quiznote b{color:var(--amber)}
+  footer{position:fixed;bottom:0;left:0;right:0;background:rgba(11,15,23,.92);border-top:1px solid var(--line);padding:8px 28px;font-size:.78rem;color:var(--dim);display:flex;justify-content:space-between}
+  footer b{color:var(--amber)}
+  @keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+  /* polymorphism */
+  .polywrap{display:flex;gap:18px;flex-wrap:wrap}
+  .refbox,.objbox{border-radius:12px;padding:12px;animation:pop .4s}
+  .refbox{border:1px dashed #2a4a76;background:rgba(77,163,255,.05);min-width:220px}
+  .objbox{border:1px dashed #2f5e42;background:rgba(55,200,113,.05);flex:1;min-width:260px}
+  .zt{font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;font-weight:700}
+  .refbox .zt{color:var(--blue)}.objbox .zt{color:var(--green)}
+  .mrow{font-family:var(--mono);font-size:.83rem;border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin-bottom:6px;background:#0f1b2e;transition:.3s}
+  .mrow.win{box-shadow:0 0 0 1.5px var(--green);background:#12301f}
+  .mrow.lose{opacity:.42;text-decoration:line-through}
+  .mrow.compile{box-shadow:0 0 0 1.5px var(--blue);background:#14284a}
+  .badge{font-size:.68rem;border-radius:5px;padding:1px 7px;margin-left:8px;font-weight:700}
+  .b-run{background:var(--green);color:#04101f}.b-comp{background:var(--blue);color:#04101f}
+  /* streams */
+  .pipe{display:flex;align-items:stretch;gap:0;padding:8px 4px;overflow-x:auto}
+  .stagebox{border:1px solid var(--line);background:#0f1b2e;border-radius:12px;padding:10px 12px;min-width:130px;text-align:center;position:relative}
+  .stagebox.active{box-shadow:0 0 0 1.5px var(--amber)}
+  .stagebox .sname{font-family:var(--mono);font-size:.8rem;color:var(--blue);margin-bottom:8px}
+  .stagebox.lazy .sname{color:var(--purple)}
+  .stagebox.term .sname{color:var(--pink)}
+  .conn{align-self:center;color:#3d4a61;font-size:1.3rem;padding:0 4px}
+  .elems{min-height:34px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+  .el{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-family:var(--mono);font-size:.8rem;font-weight:700;background:var(--green);color:#04101f;animation:pop .3s;transition:.3s}
+  .el.dropped{background:#3a4356;color:#8b98ad;text-decoration:line-through;transform:scale(.72);opacity:.5}
+  .el.mapped{background:var(--amber)}
+  .el.result{background:var(--pink);color:#fff}
+  .lazyflag{position:absolute;top:-9px;right:-6px;background:var(--purple);color:#04101f;font-size:.62rem;font-weight:800;border-radius:6px;padding:1px 6px}
+  /* exceptions */
+  .exstack{display:flex;flex-direction:column-reverse;gap:10px;max-width:420px}
+  .exframe{border:1px solid #2a4a76;background:#0f1b2e;border-radius:10px;padding:10px 14px;font-family:var(--mono);font-size:.85rem;animation:pop .35s;transition:.4s;position:relative}
+  .exframe .fn2{color:var(--blue)}
+  .exframe .tag{font-size:.68rem;margin-left:8px;color:var(--dim)}
+  .exframe.throwing{box-shadow:0 0 0 1.5px var(--pink);background:#2a1420}
+  .exframe.caught{box-shadow:0 0 0 1.5px var(--green);background:#12301f}
+  .exframe.finallyrun{box-shadow:0 0 0 1.5px var(--amber)}
+  .exframe.popped{opacity:.25;filter:grayscale(1);border-style:dashed;transform:translateX(24px)}
+  .bolt{position:absolute;right:12px;top:8px;font-size:1.1rem}
+  .console{font-family:var(--mono);font-size:.84rem;background:#05070c;border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-top:14px;min-height:70px;white-space:pre-wrap;color:var(--green)}
+  .console .err{color:var(--pink)}
+</style>
+</head>
+<body>
+<header>
+  <h1>☕ Java Internals Visualizer</h1>
+  <div class="brand">vol. 2 — polymorphism · streams · exceptions · by <b>Yassin Ghariani — JavaBoy</b></div>
+</header>
+<nav>
+  <button class="active" data-t="p1">🎭 Polymorphism dispatch</button>
+  <button data-t="p2">🌊 Stream pipeline (laziness!)</button>
+  <button data-t="p3">💥 Exception propagation</button>
+</nav>
+
+<!-- ===== TAB 1: POLYMORPHISM ===== -->
+<section id="p1" class="tab active">
+  <div class="layout">
+    <div class="card">
+      <h3>Code</h3>
+      <pre class="code" id="pcode"></pre>
+      <div class="controls">
+        <button onclick="pg(-1)">⏮ Back</button>
+        <button class="primary" onclick="pg(1)">Step ▶</button>
+        <button onclick="pr()">↺ Reset</button>
+        <span class="step-ind" id="pind"></span>
+      </div>
+      <div class="narr" id="pnarr"></div>
+    </div>
+    <div class="card">
+      <h3>Which member wins? (reference type vs object type)</h3>
+      <div class="stage">
+        <div class="polywrap">
+          <div class="refbox">
+            <div class="zt">📘 Compile time — REFERENCE type: Animal</div>
+            <div class="mrow" id="ref-name">String name = "generic" <span class="badge b-comp">FIELD</span></div>
+            <div class="mrow" id="ref-speak">void speak() <span class="badge b-comp">overridable</span></div>
+            <div class="mrow" id="ref-info">static info() <span class="badge b-comp">STATIC</span></div>
+          </div>
+          <div class="objbox">
+            <div class="zt">📗 Runtime — actual OBJECT: Dog (one heap object)</div>
+            <div class="mrow" id="obj-aname">Animal part: name = "generic"</div>
+            <div class="mrow" id="obj-dname">Dog part: name = "Rex" (SHADOWS, not replaces)</div>
+            <div class="mrow" id="obj-speak">Dog.speak() → "Woof" <span class="badge b-run">vtable</span></div>
+            <div class="mrow" id="obj-info">Dog.info() (hides Animal.info)</div>
+          </div>
+        </div>
+        <div class="console" id="pconsole"></div>
+      </div>
+    </div>
+  </div>
+  <div class="quiznote">🎯 <b>The rule:</b> instance METHODS → runtime object type wins (virtual dispatch). FIELDS and STATIC methods → reference type wins (no vtable, resolved at compile time). One question in every exam depends on exactly this.</div>
+</section>
+
+<!-- ===== TAB 2: STREAMS ===== -->
+<section id="p2" class="tab">
+  <div class="layout">
+    <div class="card">
+      <h3>Code</h3>
+      <pre class="code" id="scode"></pre>
+      <div class="controls">
+        <button onclick="sg(-1)">⏮ Back</button>
+        <button class="primary" onclick="sg(1)">Step ▶</button>
+        <button onclick="sr()">↺ Reset</button>
+        <span class="step-ind" id="sind"></span>
+      </div>
+      <div class="narr" id="snarr"></div>
+    </div>
+    <div class="card">
+      <h3>Pipeline — elements flow ONE AT A TIME, nothing runs until the terminal op</h3>
+      <div class="stage">
+        <div class="pipe" id="spipe"></div>
+        <div class="console" id="sconsole"></div>
+      </div>
+    </div>
+  </div>
+  <div class="quiznote">🎯 <b>Exam gold:</b> intermediate ops (filter/map/peek/limit…) are LAZY — without a terminal op, <i>nothing</i> executes (peek prints nothing!). Elements flow depth-first one-by-one, so <code>limit(2)</code> can stop the source early (short-circuit). A stream can be consumed exactly ONCE.</div>
+</section>
+
+<!-- ===== TAB 3: EXCEPTIONS ===== -->
+<section id="p3" class="tab">
+  <div class="layout">
+    <div class="card">
+      <h3>Code</h3>
+      <pre class="code" id="ecode"></pre>
+      <div class="controls">
+        <button onclick="eg(-1)">⏮ Back</button>
+        <button class="primary" onclick="eg(1)">Step ▶</button>
+        <button onclick="er()">↺ Reset</button>
+        <span class="step-ind" id="eind"></span>
+      </div>
+      <div class="narr" id="enarr"></div>
+    </div>
+    <div class="card">
+      <h3>The exception climbs the stack until a matching catch</h3>
+      <div class="stage">
+        <div class="exstack" id="estack"></div>
+        <div class="console" id="econsole"></div>
+      </div>
+    </div>
+  </div>
+  <div class="quiznote">🎯 <b>Exam gold:</b> an uncaught exception POPS the frame and climbs · <code>finally</code> runs even while the exception is passing through · a catch must match the type or a supertype · if nothing catches it → thread dies with a stack trace (frames listed newest-first).</div>
+</section>
+
+<footer><span>💡 Predict, then click. Prediction errors are where learning happens.</span><span>Built with ❤ by <b>Yassin Ghariani — JavaBoy ☕</b></span></footer>
+
+<script>
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button,.tab').forEach(e=>e.classList.remove('active'));
+  b.classList.add('active');document.getElementById(b.dataset.t).classList.add('active');
+});
+function renderCode(el,lines){el.innerHTML=lines.map((l,i)=>`<span class="ln" data-n="${i+1}" id="${el.id}-l${i}">${l}</span>`).join('')}
+function hl(codeId,l){document.querySelectorAll('#'+codeId+' .ln').forEach(e=>e.classList.remove('hl'));const e=document.getElementById(codeId+'-l'+l);if(e)e.classList.add('hl')}
+
+/* ===== POLYMORPHISM ===== */
+const pcode=[
+`<span class="kw">class</span> Animal {`,
+`    String name = <span class="st">"generic"</span>;`,
+`    <span class="kw">void</span> <span class="fn">speak</span>() { IO.println(<span class="st">"..."</span>); }`,
+`    <span class="kw">static</span> String <span class="fn">info</span>() { <span class="kw">return</span> <span class="st">"Animal"</span>; }`,
+`}`,
+`<span class="kw">class</span> Dog <span class="kw">extends</span> Animal {`,
+`    String name = <span class="st">"Rex"</span>;         <span class="cm">// SHADOWS the field</span>`,
+`    <span class="kw">void</span> <span class="fn">speak</span>() { IO.println(<span class="st">"Woof"</span>); } <span class="cm">// OVERRIDES</span>`,
+`    <span class="kw">static</span> String <span class="fn">info</span>() { <span class="kw">return</span> <span class="st">"Dog"</span>; }  <span class="cm">// HIDES</span>`,
+`}`,
+`<span class="cm">// main:</span>`,
+`Animal a = <span class="kw">new</span> Dog();`,
+`a.speak();                <span class="cm">// ?</span>`,
+`IO.println(a.name);       <span class="cm">// ?</span>`,
+`IO.println(a.info());     <span class="cm">// ?</span>`,
+`IO.println(((Dog) a).name); <span class="cm">// ?</span>`];
+const PS=[
+ {l:11,n:"<b>Animal a = new Dog()</b> — ONE Dog object on the heap; the reference's compile-time type is Animal. Both 'name' fields exist inside the object!",fx:{},con:""},
+ {l:12,n:"<b>a.speak()</b> — instance method → VIRTUAL DISPATCH: the JVM looks at the actual object's method table → <b>Dog.speak()</b> wins.",fx:{'obj-speak':'win','ref-speak':'lose'},con:"Woof"},
+ {l:13,n:"<b>a.name</b> — FIELDS have no vtable. Resolved at COMPILE TIME from the reference type → Animal.name → <b>generic</b>. ⚠️ Top exam trap!",fx:{'ref-name':'compile','obj-dname':'lose','obj-aname':'win'},con:"Woof\ngeneric"},
+ {l:14,n:"<b>a.info()</b> — STATIC methods don't override, they HIDE. Also resolved by reference type → <b>Animal</b>.",fx:{'ref-info':'compile','obj-info':'lose'},con:"Woof\ngeneric\nAnimal"},
+ {l:15,n:"<b>((Dog) a).name</b> — casting changes the REFERENCE type the compiler uses → Dog.name → <b>Rex</b>. The object never changed; only our lens did. 🎓",fx:{'obj-dname':'win','ref-name':'lose'},con:"Woof\ngeneric\nAnimal\nRex"}
+];
+let pi=0;
+function pp(){const s=PS[pi];hl('pcode',s.l);
+  document.getElementById('pnarr').innerHTML=s.n;
+  document.getElementById('pind').textContent=`step ${pi+1} / ${PS.length}`;
+  ['ref-name','ref-speak','ref-info','obj-aname','obj-dname','obj-speak','obj-info'].forEach(id=>document.getElementById(id).className='mrow');
+  Object.entries(s.fx).forEach(([id,c])=>document.getElementById(id).classList.add(c));
+  document.getElementById('pconsole').textContent=s.con;}
+function pg(d){pi=Math.max(0,Math.min(PS.length-1,pi+d));pp()}
+function pr(){pi=0;pp()}
+
+/* ===== STREAMS ===== */
+const scode=[
+`<span class="kw">var</span> result = Stream.of(<span class="nu">1</span>, <span class="nu">2</span>, <span class="nu">3</span>, <span class="nu">4</span>, <span class="nu">5</span>)`,
+`    .filter(n -> n % <span class="nu">2</span> == <span class="nu">1</span>)   <span class="cm">// keep odd</span>`,
+`    .map(n -> n * <span class="nu">10</span>)`,
+`    .limit(<span class="nu">2</span>)                  <span class="cm">// short-circuit!</span>`,
+`    .toList();                 <span class="cm">// TERMINAL — everything runs NOW</span>`];
+/* element journey: 1→pass→10 keep; 2 dropped; 3→pass→30 keep → limit reached; 4,5 NEVER READ */
+const SS=[
+ {l:0,n:"Pipeline BUILT — source + 3 lazy stages + no terminal yet. <b>Nothing has executed.</b> If the code stopped here, filter/map would never run.",src:[1,2,3,4,5],f:[],m:[],r:[],act:-1,con:"(nothing — streams are lazy)"},
+ {l:4,n:"<b>toList()</b> starts pulling. Element <b>1</b> travels the WHOLE pipe first (depth-first): odd ✅ → ×10 → 10 collected.",src:[2,3,4,5],f:[1],m:[10],r:[10],act:4,con:"collected: [10]"},
+ {l:1,n:"Element <b>2</b>: filter says even → ❌ DROPPED. It never reaches map. (This is why peek-after-filter prints fewer lines!)",src:[3,4,5],f:['2✗'],m:[],r:[10],act:1,con:"collected: [10]"},
+ {l:2,n:"Element <b>3</b>: odd ✅ → ×10 → <b>30</b> collected. limit(2) is now FULL.",src:[4,5],f:[3],m:[30],r:[10,30],act:2,con:"collected: [10, 30]"},
+ {l:3,n:"<b>Short-circuit:</b> limit(2) satisfied → the pipeline STOPS PULLING. Elements 4 and 5 are NEVER read from the source. 🔑",src:['4?','5?'],f:[],m:[],r:[10,30],act:3,con:"collected: [10, 30]\n(4 and 5 never processed!)"},
+ {l:4,n:"Terminal returns <b>[10, 30]</b>. The stream is now CONSUMED — calling another terminal op on it throws IllegalStateException. 🎓",src:[],f:[],m:[],r:[10,30],act:4,con:"result = [10, 30]\n⚠️ stream closed: reuse → IllegalStateException"}
+];
+let si=0;
+function sp(){const s=SS[si];hl('scode',s.l);
+  document.getElementById('snarr').innerHTML=s.n;
+  document.getElementById('sind').textContent=`step ${si+1} / ${SS.length}`;
+  const box=(name,items,cls,extra,idx)=>`<div class="stagebox ${cls} ${s.act===idx?'active':''}">${extra||''}<div class="sname">${name}</div><div class="elems">${items.map(v=>{const drop=String(v).includes('✗')||String(v).includes('?');return `<div class="el ${drop?'dropped':''} ${name.startsWith('map')&&!drop?'mapped':''} ${name.startsWith('toList')?'result':''}">${String(v).replace('✗','').replace('?','')}</div>`}).join('')}</div></div>`;
+  document.getElementById('spipe').innerHTML=
+    box('source',s.src,'',null,0)+`<div class="conn">→</div>`+
+    box('filter(odd)',s.f,'lazy','<div class="lazyflag">LAZY</div>',1)+`<div class="conn">→</div>`+
+    box('map(×10)',s.m,'lazy','<div class="lazyflag">LAZY</div>',2)+`<div class="conn">→</div>`+
+    box('limit(2)',[],'lazy','<div class="lazyflag">LAZY</div>',3)+`<div class="conn">→</div>`+
+    box('toList()',s.r,'term',null,4);
+  document.getElementById('sconsole').textContent=s.con;}
+function sg(d){si=Math.max(0,Math.min(SS.length-1,si+d));sp()}
+function sr(){si=0;sp()}
+
+/* ===== EXCEPTIONS ===== */
+const ecode=[
+`<span class="kw">void</span> <span class="fn">main</span>() {`,
+`    <span class="kw">try</span> {`,
+`        <span class="fn">a</span>();`,
+`    } <span class="kw">catch</span> (RuntimeException e) {`,
+`        IO.println(<span class="st">"caught in main"</span>);`,
+`    }`,
+`    IO.println(<span class="st">"main continues"</span>);`,
+`}`,
+`<span class="kw">void</span> <span class="fn">a</span>() {`,
+`    <span class="kw">try</span> {`,
+`        <span class="fn">b</span>();`,
+`    } <span class="kw">finally</span> {`,
+`        IO.println(<span class="st">"a's finally"</span>);  <span class="cm">// runs anyway!</span>`,
+`    }`,
+`}`,
+`<span class="kw">void</span> <span class="fn">b</span>() {`,
+`    <span class="kw">throw new</span> IllegalStateException(<span class="st">"boom"</span>);`,
+`}`];
+const ES=[
+ {l:2,n:"main calls a() calls b() — three frames on the stack.",frames:[{n:'main',s:'',t:'try(RuntimeException)'},{n:'a',s:'',t:'try/finally'},{n:'b',s:'',t:''}],con:""},
+ {l:17,n:"<b>b() throws</b> IllegalStateException. b has NO try → b can't handle it.",frames:[{n:'main',s:'',t:'try(RuntimeException)'},{n:'a',s:'',t:'try/finally'},{n:'b',s:'throwing',t:'💥 throw'}],con:""},
+ {l:16,n:"b's frame POPS. The exception climbs into a().",frames:[{n:'main',s:'',t:'try(RuntimeException)'},{n:'a',s:'throwing',t:'exception arriving'},{n:'b',s:'popped',t:'popped'}],con:""},
+ {l:12,n:"a has NO matching catch — but it has <b>finally</b>, which runs WHILE the exception passes through.",frames:[{n:'main',s:'',t:'try(RuntimeException)'},{n:'a',s:'finallyrun',t:'finally executing'},{n:'b',s:'popped',t:'popped'}],con:"a's finally"},
+ {l:14,n:"finally done → a's frame POPS too. The exception keeps climbing.",frames:[{n:'main',s:'throwing',t:'exception arriving'},{n:'a',s:'popped',t:'popped'},{n:'b',s:'popped',t:'popped'}],con:"a's finally"},
+ {l:3,n:"main's catch(RuntimeException) — IllegalStateException IS-A RuntimeException → <b>MATCH</b>. Caught!",frames:[{n:'main',s:'caught',t:'✅ caught'},{n:'a',s:'popped',t:'popped'},{n:'b',s:'popped',t:'popped'}],con:"a's finally\ncaught in main"},
+ {l:6,n:"Handled → normal flow resumes AFTER the try/catch. If nothing had matched: thread dies, stack trace printed newest-frame-first. 🎓",frames:[{n:'main',s:'caught',t:'continuing'},{n:'a',s:'popped',t:''},{n:'b',s:'popped',t:''}],con:"a's finally\ncaught in main\nmain continues"}
+];
+let ei=0;
+function ep(){const s=ES[ei];hl('ecode',s.l);
+  document.getElementById('enarr').innerHTML=s.n;
+  document.getElementById('eind').textContent=`step ${ei+1} / ${ES.length}`;
+  document.getElementById('estack').innerHTML=s.frames.map(f=>`<div class="exframe ${f.s}"><span class="fn2">${f.n}()</span><span class="tag">${f.t}</span>${f.s==='throwing'?'<span class="bolt">⚡</span>':''}</div>`).join('');
+  document.getElementById('econsole').textContent=s.con;}
+function eg(d){ei=Math.max(0,Math.min(ES.length-1,ei+d));ep()}
+function er(){ei=0;ep()}
+
+/* init */
+renderCode(document.getElementById('pcode'),pcode);
+renderCode(document.getElementById('scode'),scode);
+renderCode(document.getElementById('ecode'),ecode);
+pp();sp();ep();
+</script>
+</body>
+</html>

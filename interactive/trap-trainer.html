@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎮 OCP Trap Trainer — by Yassin Ghariani (JavaBoy)</title>
+<style>
+  :root{--bg:#0b0f17;--panel:#111827;--panel2:#0d1522;--line:#233046;--txt:#e6edf7;--dim:#8b98ad;
+    --blue:#4da3ff;--green:#37c871;--amber:#ffb84d;--pink:#ff6b8f;--purple:#b48cff;
+    --mono:'JetBrains Mono','Fira Code',Consolas,monospace}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 60px}
+  .top{width:100%;max-width:760px;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  h1{font-size:1.25rem}
+  .brand{color:var(--dim);font-size:.82rem}.brand b{color:var(--amber)}
+  .hud{width:100%;max-width:760px;display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:.85rem;color:var(--dim)}
+  .stat b{color:var(--txt);font-size:1.05rem}
+  .stat.fire b{color:var(--amber)}
+  select{background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:.85rem;margin-left:auto}
+  .card{width:100%;max-width:760px;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .topic{padding:10px 18px;border-bottom:1px solid var(--line);font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--purple)}
+  .q{padding:18px;font-size:1rem;line-height:1.6}
+  pre{font-family:var(--mono);font-size:.88rem;line-height:1.7;background:#05070c;border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:12px 18px;overflow-x:auto;white-space:pre}
+  .opts{display:grid;gap:10px;padding:6px 18px 18px}
+  .opt{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:12px 16px;cursor:pointer;font-size:.94rem;font-family:var(--mono);text-align:left;color:var(--txt);transition:.15s}
+  .opt:hover{border-color:var(--blue);transform:translateY(-1px)}
+  .opt.correct{border-color:var(--green);background:#12301f;box-shadow:0 0 0 1.5px var(--green)}
+  .opt.wrong{border-color:var(--pink);background:#2a1420;box-shadow:0 0 0 1.5px var(--pink)}
+  .opt.dim{opacity:.45;pointer-events:none}
+  .expl{margin:0 18px 18px;background:#0d1522;border-left:4px solid var(--amber);border-radius:10px;padding:12px 16px;font-size:.92rem;display:none;line-height:1.6}
+  .expl b{color:var(--amber)}
+  .actions{display:flex;gap:10px;padding:0 18px 18px}
+  .actions button{background:var(--blue);border:none;color:#04101f;font-weight:700;padding:10px 22px;border-radius:10px;cursor:pointer;font-size:.95rem;display:none}
+  .done{padding:40px 20px;text-align:center;display:none}
+  .done h2{font-size:1.6rem;margin-bottom:10px}
+  .done p{color:var(--dim);margin-bottom:18px}
+  .done button{background:var(--green);border:none;color:#04101f;font-weight:700;padding:12px 26px;border-radius:12px;cursor:pointer;font-size:1rem}
+  footer{position:fixed;bottom:0;left:0;right:0;background:rgba(11,15,23,.92);border-top:1px solid var(--line);padding:8px 24px;font-size:.76rem;color:var(--dim);text-align:center}
+  footer b{color:var(--amber)}
+  .bar{height:6px;background:var(--line)}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--green));transition:.4s;border-radius:0 4px 4px 0}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>🎮 OCP Trap Trainer</h1>
+  <div class="brand">rapid-fire exam traps · by <b>Yassin Ghariani — JavaBoy ☕</b></div>
+</div>
+<div class="hud">
+  <div class="stat">Score <b id="sc">0</b></div>
+  <div class="stat fire">Streak 🔥 <b id="st">0</b></div>
+  <div class="stat">Best <b id="bs">0</b></div>
+  <div class="stat">Question <b id="qn">1</b>/<b id="qt">0</b></div>
+  <select id="filter" onchange="start()">
+    <option value="all">All topics</option>
+    <option>Strings & memory</option><option>Operators & types</option><option>Flow & switch</option>
+    <option>OOP</option><option>Records/Enums/Sealed</option><option>Exceptions</option>
+    <option>Collections & generics</option><option>Streams</option><option>Concurrency</option><option>Java 25</option>
+  </select>
+</div>
+<div class="card">
+  <div class="bar"><i id="prog" style="width:0%"></i></div>
+  <div id="quiz">
+    <div class="topic" id="tp"></div>
+    <div class="q" id="qq"></div>
+    <pre id="qc" style="display:none"></pre>
+    <div class="opts" id="oo"></div>
+    <div class="expl" id="ee"></div>
+    <div class="actions"><button id="next" onclick="next()">Next ▶</button></div>
+  </div>
+  <div class="done" id="done">
+    <h2 id="dtitle"></h2><p id="dsub"></p>
+    <button onclick="start()">↺ Play again (reshuffled)</button>
+  </div>
+</div>
+<footer>Wrong answers → straight into your <b>Error Journal</b> (progress/PROGRESS_TRACKER.md). That's the whole point.</footer>
+
+<script>
+const B=[ /* t=topic q=question c=code o=options a=index e=explanation */
+{t:'Strings & memory',q:'What prints?',c:'String s = "ja" + "va";\nSystem.out.print(s == "java");',o:['true','false','compile error'],a:0,e:'<b>Constant folding:</b> "ja"+"va" is computed at compile time → pooled "java" → same object.'},
+{t:'Strings & memory',q:'What prints?',c:'String s = "hi";\ns.concat("!").toUpperCase();\nSystem.out.print(s);',o:['HI!','hi!','hi','HI'],a:2,e:'Strings are <b>immutable</b> — every result was discarded. s never changed.'},
+{t:'Strings & memory',q:'What prints?',c:'Integer a = 127, b = 127;\nInteger c = 128, d = 128;\nSystem.out.print((a==b) + " " + (c==d));',o:['true true','true false','false false'],a:1,e:'<b>Wrapper cache</b> −128…127: 127 hits the cache (same object), 128 makes two objects.'},
+{t:'Strings & memory',q:'What prints?',c:'var sb = new StringBuilder("ab");\nsb.reverse().append("c");\nSystem.out.print(sb);',o:['bac','abc','cba','bca'],a:0,e:'ONE mutable object: "ab"→reverse→"ba"→append→"bac". Chaining returns <b>this</b>.'},
+{t:'Operators & types',q:'What prints?',c:'int i = 10;\ni = i++ + ++i;\nSystem.out.print(i);',o:['21','22','20','23'],a:1,e:'i++ yields 10 (i→11), ++i yields 12 → 10+12=<b>22</b> assigned to i.'},
+{t:'Operators & types',q:'Which compiles?',c:'byte b = 10;\n// A: b = b * 2;\n// B: b *= 2;',o:['A only','B only','both','neither'],a:1,e:'Compound assignment has an <b>implicit cast</b>; b*2 is an int and needs an explicit cast.'},
+{t:'Operators & types',q:'What prints?',c:'System.out.print(0.1 + 0.2 == 0.3);',o:['true','false','compile error'],a:1,e:'Binary floating point can\'t represent these exactly → 0.30000000000000004. Use BigDecimal for money.'},
+{t:'Operators & types',q:'What prints?',c:'int x = 010;\nSystem.out.print(x);',o:['10','8','2','compile error'],a:1,e:'Leading 0 = <b>octal</b> literal. 010 = 8 decimal.'},
+{t:'Flow & switch',q:'What prints?',c:'Object o = 15;\nvar r = switch(o) {\n  case Integer i when i > 20 -> "A";\n  case Integer i -> "B";\n  default -> "C";\n};\nSystem.out.print(r);',o:['A','B','C','compile error'],a:1,e:'15 fails the guard → falls to the unguarded <b>Integer</b> pattern.'},
+{t:'Flow & switch',q:'What prints?',c:'int i = 2;\nswitch(i) {\n  case 1: System.out.print("1");\n  case 2: System.out.print("2");\n  case 3: System.out.print("3");\n}',o:['2','23','123','compile error'],a:1,e:'Old-style switch <b>falls through</b> without break: matches 2, then runs 3 too.'},
+{t:'Flow & switch',q:'Legal label for an unused variable in Java 25?',c:'for (var _ : list) count++;',o:['yes, _ is an unnamed variable','no, _ is a keyword error','only in patterns'],a:0,e:'Since Java 22, <b>_</b> is an unnamed variable — usable in locals, for, catch, lambda, and patterns. It cannot be READ.'},
+{t:'OOP',q:'What prints?',c:'class A { String s = "A"; String get(){return "A";} }\nclass B extends A { String s = "B"; String get(){return "B";} }\nA x = new B();\nSystem.out.print(x.s + x.get());',o:['AA','AB','BB','BA'],a:1,e:'<b>Fields → reference type (A), instance methods → object type (B).</b> The eternal exam question.'},
+{t:'OOP',q:'Valid constructor in Java 25?',c:'class C extends P {\n  C(int x) {\n    if (x < 0) throw new IllegalArgumentException();\n    super(x);\n  }\n}',o:['yes — flexible constructor bodies','no — super must be first','no — cannot throw before super'],a:0,e:'<b>JEP 513:</b> statements may precede super() if they don\'t use <b>this</b> (no reads/method calls on the instance).'},
+{t:'OOP',q:'What prints?',c:'class P { P(){ System.out.print("P"); } }\nclass C extends P { C(){ System.out.print("C"); } }\nnew C();',o:['C','PC','CP','compile error'],a:1,e:'Implicit super() runs first: parent constructor, then child.'},
+{t:'Records/Enums/Sealed',q:'What prints?',c:'record R(int a) {\n  R { a = a * 2; }\n}\nSystem.out.print(new R(5).a());',o:['5','10','compile error','0'],a:1,e:'Compact constructor mutates the <b>parameter</b>; the implicit field assignment then stores 10.'},
+{t:'Records/Enums/Sealed',q:'Records can…',c:null,o:['extend a class','be extended','implement interfaces','declare non-final instance fields'],a:2,e:'Records are implicitly <b>final</b> and already extend Record — but they CAN implement interfaces.'},
+{t:'Records/Enums/Sealed',q:'What prints?',c:'enum E { A, B;\n  static { System.out.print("S"); }\n  E() { System.out.print("C"); }\n}\nvar e = E.A;',o:['SC','SCC','CCS','CSC'],a:2,e:'Enum constants are the FIRST static fields → constructors (CC) run before the static block (S).'},
+{t:'Records/Enums/Sealed',q:'A permitted subclass of a sealed class must be…',c:null,o:['final only','final, sealed, or non-sealed','abstract','in another package'],a:1,e:'Every permitted subtype must choose: <b>final, sealed, or non-sealed</b> — and must actually extend the sealed type.'},
+{t:'Exceptions',q:'What prints?',c:'try { System.out.print("T"); return; }\nfinally { System.out.print("F"); }',o:['T','TF','F','compile error'],a:1,e:'<b>finally runs even on return.</b> Only System.exit() (or JVM death) skips it.'},
+{t:'Exceptions',q:'Close order?',c:'try (var a = new R("a");\n     var b = new R("b")) { }',o:['a then b','b then a','undefined','neither closes'],a:1,e:'try-with-resources closes in <b>reverse</b> declaration order.'},
+{t:'Exceptions',q:'Which is a Throwable but NOT an Exception?',c:null,o:['IOException','RuntimeException','Error','IllegalStateException'],a:2,e:'Hierarchy: Throwable → <b>Error</b> and Exception → RuntimeException. catch(Exception) never catches an Error (e.g. StackOverflowError, OutOfMemoryError).'},
+{t:'Collections & generics',q:'What happens?',c:'List<Integer> l = List.of(1, 2, 3);\nl.add(4);',o:['[1,2,3,4]','UnsupportedOperationException','compile error','[4,1,2,3]'],a:1,e:'<b>List.of → immutable.</b> Structural change = runtime UnsupportedOperationException (it compiles fine).'},
+{t:'Collections & generics',q:'What prints?',c:'List<Integer> l = new ArrayList<>(List.of(5, 6, 7));\nl.remove(Integer.valueOf(5));\nl.remove(1);\nSystem.out.print(l);',o:['[6]','[7]','[6, 7]','[5, 7]'],a:0,e:'remove(Object) deletes the VALUE 5 → [6, 7]; remove(int) deletes INDEX 1 (the 7) → <b>[6]</b>. The overload trap in one line.'},
+{t:'Collections & generics',q:'Which line compiles?',c:'List<? extends Number> l = new ArrayList<Integer>();',o:['l.add(1);','l.add(null);','l.add(1.0);','none of the adds'],a:1,e:'<b>Producer extends</b>: you can only add <b>null</b> to a ? extends list.'},
+{t:'Collections & generics',q:'What prints?',c:'int[] a = {1, 2};\nint[] b = a.clone();\nb[0] = 9;\nSystem.out.print(a[0]);',o:['9','1','compile error'],a:1,e:'clone() on a 1-D primitive array = real copy. (2-D arrays: only the OUTER array is copied — rows shared!)'},
+{t:'Streams',q:'What prints?',c:'Stream.of(1, 2, 3)\n  .peek(System.out::print)\n  .map(n -> n * 2);',o:['123','246','nothing','compile error'],a:2,e:'<b>No terminal operation → nothing runs.</b> Laziness is the most-tested stream fact.'},
+{t:'Streams',q:'What prints?',c:'var s = Stream.of("a", "b");\nSystem.out.print(s.count());\nSystem.out.print(s.findFirst());',o:['2Optional[a]','2a','IllegalStateException after 2','compile error'],a:2,e:'A stream is consumed by ONE terminal op — the second throws <b>IllegalStateException</b>.'},
+{t:'Streams',q:'Result?',c:'Stream.of(1,2,3,4,5)\n  .gather(Gatherers.windowFixed(2))\n  .toList()',o:['[[1,2],[3,4],[5]]','[[1,2],[3,4]]','[[1,2],[2,3],[3,4],[4,5]]'],a:0,e:'<b>windowFixed</b> emits the final partial window. windowSliding is the overlapping one.'},
+{t:'Streams',q:'What prints?',c:'var r = Stream.of("a","bb","ccc")\n  .collect(Collectors.partitioningBy(s -> s.length() > 1));\nSystem.out.print(r.get(true).size() + "" + r.get(false).size());',o:['21','12','2','compile error'],a:0,e:'partitioningBy ALWAYS has both keys: true→[bb,ccc] (2), false→[a] (1) → "21".'},
+{t:'Concurrency',q:'Virtual threads are ideal for…',c:null,o:['CPU-heavy math','blocking I/O at scale','replacing all platform threads','GPU work'],a:1,e:'They unmount from carriers while blocked → millions of concurrent <b>I/O-bound</b> tasks. CPU-bound gains nothing.'},
+{t:'Concurrency',q:'Since Java 24 (JEP 491), synchronized blocks…',c:null,o:['still pin virtual threads','no longer pin virtual threads when blocking','are deprecated','only pin on IO'],a:1,e:'<b>JEP 491</b> removed the pinning problem — blocking inside synchronized now unmounts cleanly.'},
+{t:'Concurrency',q:'What prints?',c:'static final ScopedValue<String> V = ScopedValue.newInstance();\nScopedValue.where(V, "out").run(() ->\n  ScopedValue.where(V, "in").run(() ->\n    System.out.print(V.get())));',o:['out','in','compile error','NoSuchElementException'],a:1,e:'Innermost binding wins inside its scope. Outside all scopes, get() throws NoSuchElementException.'},
+{t:'Concurrency',q:'Which is atomic without extra synchronization?',c:null,o:['count++','volatile count++','AtomicInteger.incrementAndGet()','long assignment always'],a:2,e:'++ is read-modify-write (3 steps) — volatile fixes visibility, NOT atomicity. Atomic classes do CAS.'},
+{t:'Java 25',q:'Valid COMPLETE source file in Java 25?',c:'void main() {\n  IO.println("hi");\n}',o:['yes — compact source file','no — needs a class','no — needs imports for IO','only with --preview'],a:0,e:'<b>JEP 512 (final in 25):</b> compact source files + java.lang.IO + implicit import module java.base.'},
+{t:'Java 25',q:'Which main is chosen first by the launcher?',c:'static void main(String[] args) { }\nvoid main() { }',o:['the instance no-args main','static main(String[])','ambiguity error','random'],a:1,e:'Selection order: <b>main(String[]) beats main()</b>; static/instance both allowed (instance needs a no-arg constructor).'},
+{t:'Java 25',q:'import module java.base; gives you…',c:null,o:['every class in the JDK','all packages EXPORTED by java.base','only java.lang','compile error outside compact files'],a:1,e:'<b>JEP 511:</b> module imports pull in all exported packages of that module — usable in ANY source file, not just compact ones.'},
+{t:'Java 25',q:'Ambiguity from two module imports both exporting Date is fixed by…',c:null,o:['the JVM picking java.util','a single-type import of the one you want','renaming the module','it cannot be fixed'],a:1,e:'A specific <b>single-type import</b> (import java.util.Date;) always wins over on-demand/module imports.'},
+];
+let deck=[],idx=0,score=0,streak=0,best=0,locked=false;
+const $=id=>document.getElementById(id);
+function start(){
+  const f=$('filter').value;
+  deck=B.filter(q=>f==='all'||q.t===f).sort(()=>Math.random()-.5);
+  idx=0;score=0;streak=0;locked=false;
+  $('quiz').style.display='block';$('done').style.display='none';
+  $('qt').textContent=deck.length;paint();
+}
+function paint(){
+  const q=deck[idx];locked=false;
+  $('sc').textContent=score;$('st').textContent=streak;$('bs').textContent=best;$('qn').textContent=idx+1;
+  $('prog').style.width=(idx/deck.length*100)+'%';
+  $('tp').textContent=q.t;$('qq').textContent=q.q;
+  if(q.c){$('qc').style.display='block';$('qc').textContent=q.c}else $('qc').style.display='none';
+  $('ee').style.display='none';$('next').style.display='none';
+  $('oo').innerHTML=q.o.map((o,i)=>`<button class="opt" onclick="pick(${i})">${String.fromCharCode(65+i)}.  ${o.replace(/</g,'&lt;')}</button>`).join('');
+}
+function pick(i){
+  if(locked)return;locked=true;
+  const q=deck[idx],opts=[...document.querySelectorAll('.opt')];
+  opts.forEach((o,j)=>{if(j===q.a)o.classList.add('correct');else if(j===i)o.classList.add('wrong');else o.classList.add('dim')});
+  if(i===q.a){score++;streak++;best=Math.max(best,streak)}else streak=0;
+  $('sc').textContent=score;$('st').textContent=streak;$('bs').textContent=best;
+  $('ee').innerHTML=(i===q.a?'✅ ':'❌ ')+q.e;$('ee').style.display='block';
+  $('next').style.display='inline-block';
+}
+function next(){
+  idx++;
+  if(idx>=deck.length){
+    $('quiz').style.display='none';$('done').style.display='block';$('prog').style.width='100%';
+    const pct=Math.round(score/deck.length*100);
+    $('dtitle').textContent=pct>=80?`🏆 ${score}/${deck.length} — exam ready!`:pct>=60?`💪 ${score}/${deck.length} — getting there`:`📚 ${score}/${deck.length} — back to the notes`;
+    $('dsub').textContent=`Best streak: 🔥 ${best}. Every miss belongs in your Error Journal — write the RULE, not the question.`;
+  } else paint();
+}
+start();
+</script>
+</body>
+</html>

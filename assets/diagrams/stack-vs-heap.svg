@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 440" font-family="Segoe UI, sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ff6b8f"/></marker>
+  </defs>
+  <rect width="860" height="440" rx="16" fill="#0b0f17"/>
+  <text x="430" y="34" fill="#e6edf7" font-size="20" font-weight="700" text-anchor="middle">Java Memory: Stack vs Heap</text>
+  <text x="430" y="54" fill="#8b98ad" font-size="12" text-anchor="middle">by Yassin Ghariani — JavaBoy ☕</text>
+
+  <!-- STACK -->
+  <rect x="40" y="80" width="300" height="320" rx="12" fill="#0d1b2a" stroke="#4da3ff" stroke-dasharray="6 4"/>
+  <text x="190" y="106" fill="#4da3ff" font-size="14" font-weight="700" text-anchor="middle">🥞 STACK — one per thread</text>
+
+  <rect x="65" y="130" width="250" height="110" rx="8" fill="#0f1b2e" stroke="#2a4a76"/>
+  <text x="80" y="152" fill="#4da3ff" font-size="12" font-family="monospace">main() frame</text>
+  <rect x="80" y="162" width="220" height="24" rx="5" fill="#132441" stroke="#24406b"/>
+  <text x="90" y="178" fill="#e6edf7" font-size="12" font-family="monospace">int x = 42</text>
+  <text x="292" y="178" fill="#ffb84d" font-size="11" text-anchor="end" font-family="monospace">value here</text>
+  <rect x="80" y="192" width="220" height="24" rx="5" fill="#132441" stroke="#24406b"/>
+  <text x="90" y="208" fill="#e6edf7" font-size="12" font-family="monospace">String s</text>
+  <circle cx="288" cy="204" r="5" fill="#ff6b8f"/>
+
+  <rect x="65" y="256" width="250" height="80" rx="8" fill="#0f1b2e" stroke="#4da3ff" stroke-width="1.5"/>
+  <text x="80" y="278" fill="#4da3ff" font-size="12" font-family="monospace">helper() frame ← top of stack</text>
+  <rect x="80" y="288" width="220" height="24" rx="5" fill="#132441" stroke="#24406b"/>
+  <text x="90" y="304" fill="#e6edf7" font-size="12" font-family="monospace">int[] data</text>
+  <circle cx="288" cy="300" r="5" fill="#ff6b8f"/>
+
+  <text x="190" y="378" fill="#8b98ad" font-size="11" text-anchor="middle">frames pop automatically on return</text>
+  <text x="190" y="393" fill="#8b98ad" font-size="11" text-anchor="middle">too deep → StackOverflowError</text>
+
+  <!-- HEAP -->
+  <rect x="420" y="80" width="400" height="320" rx="12" fill="#0f2013" stroke="#37c871" stroke-dasharray="6 4"/>
+  <text x="620" y="106" fill="#37c871" font-size="14" font-weight="700" text-anchor="middle">🏔️ HEAP — shared by all threads</text>
+
+  <rect x="450" y="150" width="160" height="66" rx="10" fill="#0f2418" stroke="#2f5e42"/>
+  <text x="530" y="174" fill="#37c871" font-size="11" text-anchor="middle" font-family="monospace">String</text>
+  <text x="530" y="196" fill="#e6edf7" font-size="14" text-anchor="middle" font-family="monospace">"hello"</text>
+
+  <rect x="450" y="266" width="160" height="66" rx="10" fill="#0f2418" stroke="#2f5e42"/>
+  <text x="530" y="290" fill="#37c871" font-size="11" text-anchor="middle" font-family="monospace">int[]</text>
+  <text x="530" y="312" fill="#e6edf7" font-size="14" text-anchor="middle" font-family="monospace">[1, 2, 3]</text>
+
+  <rect x="640" y="200" width="160" height="66" rx="10" fill="#1a1a1a" stroke="#3a4356" stroke-dasharray="4 4" opacity="0.55"/>
+  <text x="720" y="224" fill="#8b98ad" font-size="11" text-anchor="middle" font-family="monospace">Object (no arrows)</text>
+  <text x="720" y="246" fill="#ff6b8f" font-size="12" text-anchor="middle">🗑️ eligible for GC</text>
+
+  <text x="620" y="378" fill="#8b98ad" font-size="11" text-anchor="middle">every `new` lands here · cleaned by the Garbage Collector</text>
+  <text x="620" y="393" fill="#8b98ad" font-size="11" text-anchor="middle">full → OutOfMemoryError</text>
+
+  <!-- arrows -->
+  <path d="M296,204 C370,204 380,183 448,183" fill="none" stroke="#ff6b8f" stroke-width="2.2" stroke-dasharray="7 5" marker-end="url(#ar)"/>
+  <path d="M296,300 C370,300 380,299 448,299" fill="none" stroke="#ff6b8f" stroke-width="2.2" stroke-dasharray="7 5" marker-end="url(#ar)"/>
+  <text x="372" y="170" fill="#ff6b8f" font-size="11" font-weight="700">references = arrows</text>
+</svg>

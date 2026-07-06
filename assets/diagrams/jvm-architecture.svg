@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 420" font-family="Segoe UI, sans-serif">
+  <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4da3ff"/></marker></defs>
+  <rect width="860" height="420" rx="16" fill="#0b0f17"/>
+  <text x="430" y="34" fill="#e6edf7" font-size="20" font-weight="700" text-anchor="middle">From Source Code to Running Program</text>
+  <text x="430" y="54" fill="#8b98ad" font-size="12" text-anchor="middle">by Yassin Ghariani — JavaBoy ☕</text>
+
+  <rect x="40" y="100" width="170" height="80" rx="12" fill="#1e3a5f" stroke="#4da3ff"/>
+  <text x="125" y="132" fill="#fff" font-size="14" font-weight="700" text-anchor="middle">📄 App.java</text>
+  <text x="125" y="154" fill="#c9d6e8" font-size="11" text-anchor="middle">source you write</text>
+
+  <path d="M212,140 L306,140" stroke="#4da3ff" stroke-width="2.5" marker-end="url(#a2)"/>
+  <text x="259" y="128" fill="#4da3ff" font-size="12" text-anchor="middle" font-family="monospace">javac</text>
+
+  <rect x="310" y="100" width="170" height="80" rx="12" fill="#3d2e5f" stroke="#b48cff"/>
+  <text x="395" y="132" fill="#fff" font-size="14" font-weight="700" text-anchor="middle">📦 App.class</text>
+  <text x="395" y="154" fill="#d8c9f5" font-size="11" text-anchor="middle">bytecode — universal</text>
+
+  <path d="M482,140 L576,140" stroke="#4da3ff" stroke-width="2.5" marker-end="url(#a2)"/>
+  <text x="529" y="128" fill="#4da3ff" font-size="12" text-anchor="middle" font-family="monospace">java</text>
+
+  <!-- JVM box -->
+  <rect x="580" y="80" width="240" height="300" rx="14" fill="#101826" stroke="#37c871" stroke-width="1.5"/>
+  <text x="700" y="108" fill="#37c871" font-size="14" font-weight="700" text-anchor="middle">⚙️ JVM</text>
+  <rect x="600" y="122" width="200" height="46" rx="9" fill="#0f1b2e" stroke="#2a4a76"/>
+  <text x="700" y="141" fill="#4da3ff" font-size="11" font-weight="700" text-anchor="middle">Class Loader</text>
+  <text x="700" y="158" fill="#8b98ad" font-size="10" text-anchor="middle">load → link → initialize</text>
+  <rect x="600" y="176" width="200" height="66" rx="9" fill="#0f1b2e" stroke="#2a4a76"/>
+  <text x="700" y="196" fill="#4da3ff" font-size="11" font-weight="700" text-anchor="middle">Runtime Memory</text>
+  <text x="700" y="213" fill="#8b98ad" font-size="10" text-anchor="middle">Stack (per thread) · Heap (shared)</text>
+  <text x="700" y="229" fill="#8b98ad" font-size="10" text-anchor="middle">Metaspace · PC registers</text>
+  <rect x="600" y="250" width="200" height="46" rx="9" fill="#0f1b2e" stroke="#2a4a76"/>
+  <text x="700" y="269" fill="#4da3ff" font-size="11" font-weight="700" text-anchor="middle">Execution Engine</text>
+  <text x="700" y="286" fill="#8b98ad" font-size="10" text-anchor="middle">interpreter + JIT compiler</text>
+  <rect x="600" y="304" width="200" height="46" rx="9" fill="#0f1b2e" stroke="#2a4a76"/>
+  <text x="700" y="323" fill="#4da3ff" font-size="11" font-weight="700" text-anchor="middle">Garbage Collector</text>
+  <text x="700" y="340" fill="#8b98ad" font-size="10" text-anchor="middle">frees unreachable heap objects</text>
+
+  <!-- JDK/JRE nesting note -->
+  <rect x="40" y="230" width="440" height="150" rx="14" fill="#101826" stroke="#233046"/>
+  <text x="60" y="258" fill="#e6edf7" font-size="13" font-weight="700">The nesting to memorize:</text>
+  <rect x="60" y="272" width="400" height="92" rx="10" fill="#0d1b2a" stroke="#4da3ff"/>
+  <text x="76" y="292" fill="#4da3ff" font-size="12" font-weight="700">JDK — javac, jar, jshell, debugger…</text>
+  <rect x="76" y="300" width="368" height="54" rx="8" fill="#1b263b" stroke="#b48cff"/>
+  <text x="92" y="318" fill="#b48cff" font-size="12" font-weight="700">JRE — core libraries</text>
+  <rect x="92" y="324" width="336" height="22" rx="6" fill="#2d1b3d" stroke="#ff8fa3"/>
+  <text x="108" y="340" fill="#ff8fa3" font-size="11" font-weight="700">JVM — the engine that runs bytecode</text>
+</svg>

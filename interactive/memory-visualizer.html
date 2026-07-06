@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>☕ Java Memory Visualizer — by Yassin Ghariani (JavaBoy)</title>
+<style>
+  :root{
+    --bg:#0b0f17; --panel:#111827; --panel2:#0d1522; --line:#233046;
+    --txt:#e6edf7; --dim:#8b98ad; --blue:#4da3ff; --green:#37c871;
+    --amber:#ffb84d; --pink:#ff6b8f; --purple:#b48cff; --pool:#ffd54d;
+    --mono:'JetBrains Mono','Fira Code',Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+  header{padding:20px 28px 10px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  header h1{font-size:1.35rem}
+  header .brand{color:var(--dim);font-size:.85rem}
+  header .brand b{color:var(--amber)}
+  nav{display:flex;gap:8px;padding:10px 28px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  nav button{background:var(--panel);border:1px solid var(--line);color:var(--dim);padding:9px 16px;border-radius:10px 10px 0 0;cursor:pointer;font-size:.92rem;transition:.2s}
+  nav button.active{color:var(--txt);border-color:var(--blue);background:var(--panel2);box-shadow:0 -2px 0 var(--blue) inset}
+  nav button:hover{color:var(--txt)}
+  .tab{display:none;padding:20px 28px 60px}
+  .tab.active{display:block}
+  .layout{display:grid;grid-template-columns:minmax(330px,1fr) minmax(480px,1.4fr);gap:18px;align-items:start}
+  @media(max-width:900px){.layout{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .card h3{padding:10px 16px;border-bottom:1px solid var(--line);font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+  pre.code{font-family:var(--mono);font-size:.86rem;line-height:1.85;padding:14px 0;overflow-x:auto}
+  pre.code .ln{display:block;padding:0 16px 0 44px;position:relative;white-space:pre}
+  pre.code .ln::before{content:attr(data-n);position:absolute;left:12px;color:#3d4a61;font-size:.75rem;top:3px}
+  pre.code .ln.hl{background:linear-gradient(90deg,rgba(77,163,255,.22),transparent);border-left:3px solid var(--blue)}
+  .kw{color:var(--purple)} .st{color:var(--green)} .cm{color:#586a85} .nu{color:var(--amber)} .fn{color:var(--blue)}
+  .controls{display:flex;gap:10px;align-items:center;padding:14px 16px;border-top:1px solid var(--line);flex-wrap:wrap}
+  .controls button{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:8px 16px;border-radius:9px;cursor:pointer;font-size:.9rem;transition:.15s}
+  .controls button:hover{border-color:var(--blue);transform:translateY(-1px)}
+  .controls button.primary{background:var(--blue);border-color:var(--blue);color:#04101f;font-weight:700}
+  .controls .step-ind{margin-left:auto;color:var(--dim);font-size:.85rem;font-family:var(--mono)}
+  .narr{padding:13px 16px;color:var(--txt);font-size:.93rem;min-height:64px;border-top:1px solid var(--line);background:var(--panel2)}
+  .narr b{color:var(--amber)}
+  .memwrap{position:relative}
+  .mem{display:grid;grid-template-columns:1fr 1.35fr;gap:14px;padding:16px;min-height:430px}
+  .zone{border-radius:12px;padding:12px;position:relative}
+  .zone .zt{font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;font-weight:700}
+  .stackzone{background:linear-gradient(180deg,rgba(77,163,255,.07),transparent);border:1px dashed #2a4a76}
+  .stackzone .zt{color:var(--blue)}
+  .heapzone{background:linear-gradient(180deg,rgba(55,200,113,.06),transparent);border:1px dashed #2f5e42}
+  .heapzone .zt{color:var(--green)}
+  .frames{display:flex;flex-direction:column-reverse;gap:10px}
+  .frame{border:1px solid #2a4a76;background:#0f1b2e;border-radius:10px;padding:8px 10px;animation:pop .35s ease}
+  .frame.top{box-shadow:0 0 0 1.5px var(--blue), 0 6px 18px rgba(77,163,255,.15)}
+  .frame .fname{font-family:var(--mono);font-size:.8rem;color:var(--blue);margin-bottom:6px}
+  .vars{display:flex;flex-direction:column;gap:5px}
+  .var{font-family:var(--mono);font-size:.82rem;background:#132441;border:1px solid #24406b;border-radius:7px;padding:4px 9px;display:flex;justify-content:space-between;gap:8px;align-items:center;transition:.3s}
+  .var .val{color:var(--amber)} .var .ref{color:var(--pink);font-weight:700}
+  .var.changed{box-shadow:0 0 0 1.5px var(--amber);background:#233046}
+  .heapobjs{display:flex;flex-wrap:wrap;gap:12px;align-content:flex-start}
+  .obj{border:1px solid #2f5e42;background:#0f2418;border-radius:11px;padding:9px 12px;min-width:120px;animation:pop .4s ease;transition:.5s}
+  .obj .ot{font-family:var(--mono);font-size:.78rem;color:var(--green);margin-bottom:5px}
+  .obj .ov{font-family:var(--mono);font-size:.9rem;color:var(--txt)}
+  .obj.changed{box-shadow:0 0 0 1.5px var(--amber)}
+  .obj.garbage{opacity:.28;filter:grayscale(1);border-style:dashed}
+  .obj.garbage::after{content:'🗑️ unreachable';display:block;font-size:.68rem;color:var(--pink);margin-top:4px}
+  .obj.pooled{border-color:var(--pool);background:#241f0c}
+  .obj.pooled .ot{color:var(--pool)}
+  svg.wires{position:absolute;inset:0;pointer-events:none;overflow:visible}
+  svg.wires path{fill:none;stroke:var(--pink);stroke-width:2;stroke-dasharray:6 5;opacity:.9;animation:dash 1.2s linear infinite}
+  @keyframes dash{to{stroke-dashoffset:-22}}
+  @keyframes pop{from{transform:scale(.75);opacity:0}to{transform:scale(1);opacity:1}}
+  .legend{display:flex;gap:16px;padding:10px 16px;color:var(--dim);font-size:.78rem;flex-wrap:wrap;border-top:1px solid var(--line)}
+  .legend span::before{content:'';display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+  .lg-s::before{background:var(--blue)} .lg-h::before{background:var(--green)} .lg-r::before{background:var(--pink)} .lg-p::before{background:var(--pool)}
+  .quiznote{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:10px;padding:12px 16px;font-size:.9rem;color:var(--dim)}
+  .quiznote b{color:var(--amber)}
+  footer{position:fixed;bottom:0;left:0;right:0;background:rgba(11,15,23,.92);backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:8px 28px;font-size:.78rem;color:var(--dim);display:flex;justify-content:space-between}
+  footer b{color:var(--amber)}
+  /* GC tab */
+  .gcstage{display:grid;grid-template-columns:2fr 1fr 1fr 2fr;gap:12px;padding:16px;min-height:340px}
+  .gcz{border-radius:12px;border:1px dashed var(--line);padding:10px;display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start}
+  .gcz h4{width:100%;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+  .gcz.eden{border-color:#2a4a76}.gcz.eden h4{color:var(--blue)}
+  .gcz.sv{border-color:#5e4a2f}.gcz.sv h4{color:var(--amber)}
+  .gcz.old{border-color:#5e2f3e}.gcz.old h4{color:var(--pink)}
+  .dot{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-size:.72rem;font-family:var(--mono);color:#04101f;font-weight:700;background:var(--green);transition:all .6s ease;animation:pop .4s}
+  .dot.dead{background:#3a4356;color:#8b98ad;text-decoration:line-through;transform:scale(.7);opacity:.4}
+</style>
+</head>
+<body>
+<header>
+  <h1>☕ Java Memory Visualizer</h1>
+  <div class="brand">an animated companion to <b>OCP Java 25 Mastery</b> · by <b>Yassin Ghariani — JavaBoy</b></div>
+</header>
+<nav>
+  <button class="active" data-t="t1">🥞 Stack & Heap step-through</button>
+  <button data-t="t2">🔤 String Pool</button>
+  <button data-t="t3">🗑️ Garbage Collector</button>
+</nav>
+
+<!-- ============ TAB 1: STACK & HEAP ============ -->
+<section id="t1" class="tab active">
+  <div class="layout">
+    <div class="card">
+      <h3>Code (watch the highlighted line)</h3>
+      <pre class="code" id="code1"></pre>
+      <div class="controls">
+        <button onclick="go1(-1)">⏮ Back</button>
+        <button class="primary" onclick="go1(1)">Step ▶</button>
+        <button onclick="auto1()" id="auto1btn">▶▶ Auto-play</button>
+        <button onclick="reset1()">↺ Reset</button>
+        <span class="step-ind" id="ind1"></span>
+      </div>
+      <div class="narr" id="narr1"></div>
+    </div>
+    <div class="card memwrap">
+      <h3>Memory</h3>
+      <div class="mem">
+        <div class="zone stackzone"><div class="zt">🥞 Stack (per thread)</div><div class="frames" id="frames1"></div></div>
+        <div class="zone heapzone"><div class="zt">🏔️ Heap (shared)</div><div class="heapobjs" id="heap1"></div></div>
+      </div>
+      <svg class="wires" id="wires1"></svg>
+      <div class="legend"><span class="lg-s">stack frame / local</span><span class="lg-h">heap object</span><span class="lg-r">reference (arrow)</span></div>
+    </div>
+  </div>
+  <div class="quiznote">🎯 <b>What to notice:</b> ① primitives copy VALUES, references copy ARROWS · ② each call pushes a frame, each return pops it · ③ reassigning a parameter never re-points the caller's variable · ④ objects with no incoming arrows become 🗑️ garbage.</div>
+</section>
+
+<!-- ============ TAB 2: STRING POOL ============ -->
+<section id="t2" class="tab">
+  <div class="layout">
+    <div class="card">
+      <h3>Code</h3>
+      <pre class="code" id="code2"></pre>
+      <div class="controls">
+        <button onclick="go2(-1)">⏮ Back</button>
+        <button class="primary" onclick="go2(1)">Step ▶</button>
+        <button onclick="reset2()">↺ Reset</button>
+        <span class="step-ind" id="ind2"></span>
+      </div>
+      <div class="narr" id="narr2"></div>
+    </div>
+    <div class="card memwrap">
+      <h3>Memory</h3>
+      <div class="mem">
+        <div class="zone stackzone"><div class="zt">🥞 Stack</div><div class="frames" id="frames2"></div></div>
+        <div class="zone heapzone"><div class="zt">🏔️ Heap — 🏊 pool objects in gold</div><div class="heapobjs" id="heap2"></div></div>
+      </div>
+      <svg class="wires" id="wires2"></svg>
+      <div class="legend"><span class="lg-p">String Pool object (shared literal)</span><span class="lg-h">regular heap object</span><span class="lg-r">reference</span></div>
+    </div>
+  </div>
+  <div class="quiznote">🎯 <b>Exam gold:</b> literals & compile-time constants share ONE pooled object (<code>==</code> true). <code>new String(...)</code> and runtime concatenation create fresh objects (<code>==</code> false, <code>equals</code> true). <code>intern()</code> returns the pooled arrow.</div>
+</section>
+
+<!-- ============ TAB 3: GC ============ -->
+<section id="t3" class="tab">
+  <div class="card">
+    <h3>Generational GC — objects are born in Eden, survivors age, old-timers get promoted</h3>
+    <div class="gcstage">
+      <div class="gcz eden"><h4>👶 Eden (births)</h4><div id="eden" style="display:contents"></div></div>
+      <div class="gcz sv"><h4>Survivor S0</h4><div id="s0" style="display:contents"></div></div>
+      <div class="gcz sv"><h4>Survivor S1</h4><div id="s1" style="display:contents"></div></div>
+      <div class="gcz old"><h4>👴 Old Generation</h4><div id="old" style="display:contents"></div></div>
+    </div>
+    <div class="controls">
+      <button class="primary" onclick="gcAlloc()">+ new Object()</button>
+      <button onclick="gcAlloc(5)">+ allocate ×5</button>
+      <button onclick="gcKill()">💀 drop random references</button>
+      <button onclick="gcMinor()">🧹 Minor GC (young)</button>
+      <button onclick="gcReset()">↺ Reset</button>
+      <span class="step-ind" id="gcstats"></span>
+    </div>
+    <div class="narr" id="narr3">Allocate objects, drop some references, then run a <b>Minor GC</b>: dead objects vanish, live ones move to a Survivor space and age (number on the chip). At age 3 they're promoted to the Old Generation. This is exactly why "most objects die young" makes Java fast.</div>
+  </div>
+  <div class="quiznote">🎯 <b>Exam facts:</b> GC frees only UNREACHABLE objects · <code>System.gc()</code> is a request, not a command · setting a reference to <code>null</code> or re-pointing it can make objects eligible · islands of isolation are collected too · <code>StackOverflowError</code> is a stack problem, <code>OutOfMemoryError</code> a heap problem.</div>
+</section>
+
+<footer><span>💡 Tip: step through Tab 1 until you can PREDICT each step before clicking.</span><span>Built with ❤ by <b>Yassin Ghariani — JavaBoy ☕</b></span></footer>
+
+<script>
+/* ---------- tabs ---------- */
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button,.tab').forEach(e=>e.classList.remove('active'));
+  b.classList.add('active');document.getElementById(b.dataset.t).classList.add('active');
+  drawWires(1);drawWires(2);
+});
+
+/* ---------- shared render helpers ---------- */
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function renderCode(el,lines){el.innerHTML=lines.map((l,i)=>`<span class="ln" data-n="${i+1}" id="${el.id}-l${i}">${l}</span>`).join('')}
+function state(steps,i){ // steps are cumulative snapshots
+  return steps[Math.max(0,Math.min(i,steps.length-1))];
+}
+function renderMem(fid,hid,wid,snap){
+  const F=document.getElementById(fid),H=document.getElementById(hid);
+  F.innerHTML=snap.frames.map((f,fi)=>`<div class="frame ${fi===snap.frames.length-1?'top':''}"><div class="fname">${f.name}()</div><div class="vars">${f.vars.map(v=>`<div class="var ${v.ch?'changed':''}" id="${fid}-v-${f.name}-${v.n}"><span>${v.n}</span><span class="${v.ref?'ref':'val'}">${v.ref?'➜':esc(String(v.v))}</span></div>`).join('')}</div></div>`).join('');
+  H.innerHTML=snap.heap.map(o=>`<div class="obj ${o.ch?'changed':''} ${o.dead?'garbage':''} ${o.pool?'pooled':''}" id="${hid}-o-${o.id}"><div class="ot">${o.t} ${o.pool?'🏊':''}</div><div class="ov">${esc(o.v)}</div></div>`).join('');
+  requestAnimationFrame(()=>drawWiresFor(fid,hid,wid,snap));
+}
+function drawWiresFor(fid,hid,wid,snap){
+  const svg=document.getElementById(wid); if(!svg)return;
+  const wrap=svg.parentElement.getBoundingClientRect(); let d='';
+  snap.frames.forEach(f=>f.vars.forEach(v=>{
+    if(!v.ref||v.v==null)return;
+    const a=document.getElementById(`${fid}-v-${f.name}-${v.n}`),b=document.getElementById(`${hid}-o-${v.v}`);
+    if(!a||!b)return;
+    const ra=a.getBoundingClientRect(),rb=b.getBoundingClientRect();
+    const x1=ra.right-wrap.left,y1=ra.top+ra.height/2-wrap.top;
+    const x2=rb.left-wrap.left,y2=rb.top+rb.height/2-wrap.top;
+    d+=`<path d="M${x1},${y1} C${x1+45},${y1} ${x2-45},${y2} ${x2},${y2}"/>`;
+  }));
+  svg.innerHTML=d;
+}
+let lastSnap={1:null,2:null};
+function drawWires(n){if(lastSnap[n])drawWiresFor('frames'+n,'heap'+n,'wires'+n,lastSnap[n])}
+addEventListener('resize',()=>{drawWires(1);drawWires(2)});
+
+/* ============ TAB 1 script & steps ============ */
+const code1=[
+`<span class="kw">void</span> <span class="fn">main</span>() {`,
+`    <span class="kw">int</span> x = <span class="nu">5</span>;`,
+`    <span class="kw">int</span> y = x;              <span class="cm">// copy the VALUE</span>`,
+`    <span class="kw">var</span> sb = <span class="kw">new</span> StringBuilder(<span class="st">"A"</span>);`,
+`    <span class="kw">int</span>[] arr = {<span class="nu">1</span>, <span class="nu">2</span>};`,
+`    <span class="kw">int</span>[] arr2 = arr;        <span class="cm">// copy the ARROW</span>`,
+`    arr2[<span class="nu">0</span>] = <span class="nu">99</span>;`,
+`    <span class="fn">change</span>(sb);`,
+`    IO.println(sb);          <span class="cm">// "AB"</span>`,
+`}`,
+`<span class="kw">void</span> <span class="fn">change</span>(StringBuilder p) {`,
+`    p.append(<span class="st">"B"</span>);           <span class="cm">// mutate shared object</span>`,
+`    p = <span class="kw">new</span> StringBuilder(<span class="st">"Z"</span>); <span class="cm">// re-point LOCAL copy only</span>`,
+`}`];
+const S1=[
+ {l:0,n:"<b>main()</b> is called → a frame is pushed onto the stack.",frames:[{name:'main',vars:[]}],heap:[]},
+ {l:1,n:"<b>int x = 5</b> — a primitive: the value 5 lives directly inside the frame.",frames:[{name:'main',vars:[{n:'x',v:5,ch:1}]}],heap:[]},
+ {l:2,n:"<b>y = x</b> copies the VALUE. Two independent 5s. Changing y would never touch x.",frames:[{name:'main',vars:[{n:'x',v:5},{n:'y',v:5,ch:1}]}],heap:[]},
+ {l:3,n:"<b>new StringBuilder(\"A\")</b> allocates an object on the HEAP; <b>sb</b> stores only the arrow.",frames:[{name:'main',vars:[{n:'x',v:5},{n:'y',v:5},{n:'sb',v:'sb1',ref:1,ch:1}]}],heap:[{id:'sb1',t:'StringBuilder',v:'"A"',ch:1}]},
+ {l:4,n:"Array literals are heap objects too. <b>arr</b> is another arrow.",frames:[{name:'main',vars:[{n:'x',v:5},{n:'y',v:5},{n:'sb',v:'sb1',ref:1},{n:'arr',v:'a1',ref:1,ch:1}]}],heap:[{id:'sb1',t:'StringBuilder',v:'"A"'},{id:'a1',t:'int[]',v:'[1, 2]',ch:1}]},
+ {l:5,n:"<b>arr2 = arr</b> copies the ARROW — both variables now point at the SAME array.",frames:[{name:'main',vars:[{n:'x',v:5},{n:'y',v:5},{n:'sb',v:'sb1',ref:1},{n:'arr',v:'a1',ref:1},{n:'arr2',v:'a1',ref:1,ch:1}]}],heap:[{id:'sb1',t:'StringBuilder',v:'"A"'},{id:'a1',t:'int[]',v:'[1, 2]'}]},
+ {l:6,n:"<b>arr2[0]=99</b> follows the arrow and mutates the ONE array. arr sees it too! ⚠️",frames:[{name:'main',vars:[{n:'x',v:5},{n:'y',v:5},{n:'sb',v:'sb1',ref:1},{n:'arr',v:'a1',ref:1},{n:'arr2',v:'a1',ref:1}]}],heap:[{id:'sb1',t:'StringBuilder',v:'"A"'},{id:'a1',t:'int[]',v:'[99, 2]',ch:1}]},
+ {l:7,n:"<b>change(sb)</b> — a NEW frame. Parameter <b>p</b> receives a copy of the arrow (pass-by-value!).",frames:[{name:'main',vars:[{n:'x',v:5},{n:'y',v:5},{n:'sb',v:'sb1',ref:1},{n:'arr',v:'a1',ref:1},{n:'arr2',v:'a1',ref:1}]},{name:'change',vars:[{n:'p',v:'sb1',ref:1,ch:1}]}],heap:[{id:'sb1',t:'StringBuilder',v:'"A"'},{id:'a1',t:'int[]',v:'[99, 2]'}]},
+ {l:11,n:"<b>p.append(\"B\")</b> mutates the SHARED object — main's sb sees \"AB\".",frames:[{name:'main',vars:[{n:'x',v:5},{n:'y',v:5},{n:'sb',v:'sb1',ref:1},{n:'arr',v:'a1',ref:1},{n:'arr2',v:'a1',ref:1}]},{name:'change',vars:[{n:'p',v:'sb1',ref:1}]}],heap:[{id:'sb1',t:'StringBuilder',v:'"AB"',ch:1},{id:'a1',t:'int[]',v:'[99, 2]'}]},
+ {l:12,n:"<b>p = new StringBuilder(\"Z\")</b> re-points ONLY the local p. main's sb is untouched. 🔑",frames:[{name:'main',vars:[{n:'x',v:5},{n:'y',v:5},{n:'sb',v:'sb1',ref:1},{n:'arr',v:'a1',ref:1},{n:'arr2',v:'a1',ref:1}]},{name:'change',vars:[{n:'p',v:'sb2',ref:1,ch:1}]}],heap:[{id:'sb1',t:'StringBuilder',v:'"AB"'},{id:'sb2',t:'StringBuilder',v:'"Z"',ch:1},{id:'a1',t:'int[]',v:'[99, 2]'}]},
+ {l:13,n:"change() returns → its frame POPS. \"Z\" lost its only arrow → 🗑️ garbage.",frames:[{name:'main',vars:[{n:'x',v:5},{n:'y',v:5},{n:'sb',v:'sb1',ref:1},{n:'arr',v:'a1',ref:1},{n:'arr2',v:'a1',ref:1}]}],heap:[{id:'sb1',t:'StringBuilder',v:'"AB"'},{id:'sb2',t:'StringBuilder',v:'"Z"',dead:1},{id:'a1',t:'int[]',v:'[99, 2]'}]},
+ {l:8,n:"<b>IO.println(sb)</b> prints <b>AB</b> — mutation survived, reassignment didn't. That's Java's pass-by-value in one program. 🎓",frames:[{name:'main',vars:[{n:'x',v:5},{n:'y',v:5},{n:'sb',v:'sb1',ref:1},{n:'arr',v:'a1',ref:1},{n:'arr2',v:'a1',ref:1}]}],heap:[{id:'sb1',t:'StringBuilder',v:'"AB"',ch:1},{id:'sb2',t:'StringBuilder',v:'"Z"',dead:1},{id:'a1',t:'int[]',v:'[99, 2]'}]}
+];
+let i1=0,timer1=null;
+function paint1(){const s=state(S1,i1);lastSnap[1]=s;
+  document.querySelectorAll('#code1 .ln').forEach(e=>e.classList.remove('hl'));
+  const ln=document.getElementById('code1-l'+s.l);if(ln)ln.classList.add('hl');
+  document.getElementById('narr1').innerHTML=s.n;
+  document.getElementById('ind1').textContent=`step ${i1+1} / ${S1.length}`;
+  renderMem('frames1','heap1','wires1',s);}
+function go1(d){i1=Math.max(0,Math.min(S1.length-1,i1+d));paint1()}
+function reset1(){i1=0;stopAuto();paint1()}
+function auto1(){if(timer1){stopAuto();return}document.getElementById('auto1btn').textContent='⏸ Pause';
+  timer1=setInterval(()=>{if(i1>=S1.length-1)stopAuto();else go1(1)},2200)}
+function stopAuto(){clearInterval(timer1);timer1=null;document.getElementById('auto1btn').textContent='▶▶ Auto-play'}
+
+/* ============ TAB 2: String pool ============ */
+const code2=[
+`String a = <span class="st">"java"</span>;              <span class="cm">// literal → pool</span>`,
+`String b = <span class="st">"java"</span>;              <span class="cm">// SAME pooled object</span>`,
+`String c = <span class="kw">new</span> String(<span class="st">"java"</span>);  <span class="cm">// forced new object</span>`,
+`String d = <span class="st">"ja"</span> + <span class="st">"va"</span>;         <span class="cm">// constant folding → pool</span>`,
+`String e = c.intern();          <span class="cm">// arrow into the pool</span>`,
+`IO.println(a == b);             <span class="cm">// ?</span>`,
+`IO.println(a == c);             <span class="cm">// ?</span>`,
+`IO.println(a == d && a == e);   <span class="cm">// ?</span>`];
+const S2=[
+ {l:0,n:"<b>\"java\"</b> is a literal → stored ONCE in the String Pool. a points there.",frames:[{name:'main',vars:[{n:'a',v:'p1',ref:1,ch:1}]}],heap:[{id:'p1',t:'String',v:'"java"',pool:1,ch:1}]},
+ {l:1,n:"Same literal → the compiler reuses the SAME pooled object. No new allocation.",frames:[{name:'main',vars:[{n:'a',v:'p1',ref:1},{n:'b',v:'p1',ref:1,ch:1}]}],heap:[{id:'p1',t:'String',v:'"java"',pool:1}]},
+ {l:2,n:"<b>new String(...)</b> ALWAYS allocates a fresh object outside the pool — same characters, different identity.",frames:[{name:'main',vars:[{n:'a',v:'p1',ref:1},{n:'b',v:'p1',ref:1},{n:'c',v:'h1',ref:1,ch:1}]}],heap:[{id:'p1',t:'String',v:'"java"',pool:1},{id:'h1',t:'String',v:'"java"',ch:1}]},
+ {l:3,n:"<b>\"ja\"+\"va\"</b> is a compile-time CONSTANT → folded to \"java\" → pool again. (A runtime concat would NOT be.)",frames:[{name:'main',vars:[{n:'a',v:'p1',ref:1},{n:'b',v:'p1',ref:1},{n:'c',v:'h1',ref:1},{n:'d',v:'p1',ref:1,ch:1}]}],heap:[{id:'p1',t:'String',v:'"java"',pool:1},{id:'h1',t:'String',v:'"java"'}]},
+ {l:4,n:"<b>intern()</b> asks: \"is this text in the pool?\" → returns the POOLED arrow.",frames:[{name:'main',vars:[{n:'a',v:'p1',ref:1},{n:'b',v:'p1',ref:1},{n:'c',v:'h1',ref:1},{n:'d',v:'p1',ref:1},{n:'e',v:'p1',ref:1,ch:1}]}],heap:[{id:'p1',t:'String',v:'"java"',pool:1,ch:1},{id:'h1',t:'String',v:'"java"'}]},
+ {l:5,n:"<b>a == b → true</b> — identical arrows into the pool.",frames:[{name:'main',vars:[{n:'a',v:'p1',ref:1,ch:1},{n:'b',v:'p1',ref:1,ch:1},{n:'c',v:'h1',ref:1},{n:'d',v:'p1',ref:1},{n:'e',v:'p1',ref:1}]}],heap:[{id:'p1',t:'String',v:'"java"',pool:1},{id:'h1',t:'String',v:'"java"'}]},
+ {l:6,n:"<b>a == c → false</b> — different objects. (<b>a.equals(c)</b> is true: same characters.)",frames:[{name:'main',vars:[{n:'a',v:'p1',ref:1,ch:1},{n:'b',v:'p1',ref:1},{n:'c',v:'h1',ref:1,ch:1},{n:'d',v:'p1',ref:1},{n:'e',v:'p1',ref:1}]}],heap:[{id:'p1',t:'String',v:'"java"',pool:1},{id:'h1',t:'String',v:'"java"',ch:1}]},
+ {l:7,n:"<b>a == d && a == e → true</b> — folding and intern() both land in the pool. You just mastered a top-3 exam trap. 🏆",frames:[{name:'main',vars:[{n:'a',v:'p1',ref:1,ch:1},{n:'b',v:'p1',ref:1},{n:'c',v:'h1',ref:1},{n:'d',v:'p1',ref:1,ch:1},{n:'e',v:'p1',ref:1,ch:1}]}],heap:[{id:'p1',t:'String',v:'"java"',pool:1,ch:1},{id:'h1',t:'String',v:'"java"'}]}
+];
+let i2=0;
+function paint2(){const s=state(S2,i2);lastSnap[2]=s;
+  document.querySelectorAll('#code2 .ln').forEach(e=>e.classList.remove('hl'));
+  const ln=document.getElementById('code2-l'+s.l);if(ln)ln.classList.add('hl');
+  document.getElementById('narr2').innerHTML=s.n;
+  document.getElementById('ind2').textContent=`step ${i2+1} / ${S2.length}`;
+  renderMem('frames2','heap2','wires2',s);}
+function go2(d){i2=Math.max(0,Math.min(S2.length-1,i2+d));paint2()}
+function reset2(){i2=0;paint2()}
+
+/* ============ TAB 3: GC playground ============ */
+let gcObjs=[],gcN=0;
+function gcRender(){
+  ['eden','s0','s1','old'].forEach(z=>document.getElementById(z).innerHTML=
+    gcObjs.filter(o=>o.zone===z).map(o=>`<div class="dot ${o.dead?'dead':''}" title="age ${o.age}">${o.dead?'✝':o.age}</div>`).join(''));
+  const live=gcObjs.filter(o=>!o.dead).length;
+  document.getElementById('gcstats').textContent=`objects: ${live} live / ${gcObjs.length-live} dead`;
+}
+function gcAlloc(n=1){for(let k=0;k<n;k++)gcObjs.push({id:++gcN,zone:'eden',age:0,dead:false});
+  document.getElementById('narr3').innerHTML='New objects are always born in <b>Eden</b>. Cheap and fast — just a pointer bump.';gcRender()}
+function gcKill(){const live=gcObjs.filter(o=>!o.dead);if(!live.length)return;
+  live.sort(()=>Math.random()-.5).slice(0,Math.max(1,Math.floor(live.length*0.4))).forEach(o=>o.dead=true);
+  document.getElementById('narr3').innerHTML='References dropped — the marked ✝ objects are now <b>unreachable</b>. They still occupy memory until a GC runs!';gcRender()}
+function gcMinor(){
+  gcObjs=gcObjs.filter(o=>!o.dead||o.zone==='old');           // young dead collected
+  const from=gcObjs.some(o=>o.zone==='s0')?'s0':'s1', to=from==='s0'?'s1':'s0';
+  gcObjs.forEach(o=>{
+    if(o.zone==='old')return;
+    if(o.dead)return;
+    o.age++;
+    if(o.age>=3)o.zone='old';
+    else if(o.zone==='eden')o.zone=to;
+    else o.zone=to;
+  });
+  document.getElementById('narr3').innerHTML='<b>Minor GC:</b> dead young objects vanished 🗑️, survivors copied to the other Survivor space and aged +1. At age 3 → promoted to the <b>Old Generation</b>. This "most objects die young" bet is what makes the JVM fast.';
+  gcRender()}
+function gcReset(){gcObjs=[];gcN=0;gcRender();document.getElementById('narr3').innerHTML='Playground reset. Allocate → drop references → run Minor GC and watch.'}
+
+/* init */
+renderCode(document.getElementById('code1'),code1);
+renderCode(document.getElementById('code2'),code2);
+paint1();paint2();gcRender();
+</script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+Size of int / long / char in bits?	32 / 64 / 16 (char is unsigned 0–65535)
+byte b = 1; b = b + 1; — compiles?	No — b+1 is int, needs cast. (b += 1 compiles: implicit cast)
+Integer a=127,b=127; a==b?	true — Integer cache covers −128..127 (128 would be false)
+Integer i = null; int j = i;	NullPointerException — unboxing null
+float f = 1.5; — compiles?	No — 1.5 is double; needs 1.5f
+Default value of an uninitialized LOCAL variable?	None — using it is a COMPILE error (fields get defaults)
+int i = 017; value?	15 — leading zero = octal
+5 % -3 = ?	2 — remainder sign follows the DIVIDEND
+Math.round(-2.5)?	−2 — rounds half up (toward positive infinity)
+"abc".substring(2,2)?	"" — legal empty string (begin==end)
+s.isEmpty() vs s.isBlank()?	isEmpty: length==0. isBlank: only whitespace (or empty)
+String immutability trap?	Methods return NEW strings; ignoring the return value changes nothing
+StringBuilder.equals with same content?	false — no equals override; compares references
+Text block opening rule?	""" must be immediately followed by a line terminator
+Period.ofYears(1).ofDays(2) holds?	Only 2 days — static methods; chain replaces, doesn't accumulate
+LocalDate.of(2026,2,30)?	Compiles; throws DateTimeException at runtime
+Instant.until(Instant) returns? (Java 23)	Duration
+Valid switch selector types?	byte short char int + wrappers, String, enum; pattern switch: any reference type. NEVER long/float/double/boolean
+switch expression block returns a value with?	yield (NOT return)
+Can you mix -> and : cases in one switch?	No — compile error
+Pattern dominance rule?	More general pattern before more specific = compile error (unreachable)
+Pattern switch on null without case null?	NullPointerException at runtime
+case Integer i when i>10 — what is 'when'?	A guard; only valid on patterns, not constants
+Unnamed variable _ — where usable?	catch params, lambda params, for-each, record patterns, local var declarations, try-with-resources; NEVER readable
+if (o instanceof String s || s.isEmpty()) — compiles?	No — with || the binding isn't guaranteed; s out of scope
+while(false){} vs if(false){}?	while: unreachable → compile error. if: allowed (debug-flag exception)
+Full init order for new Child()?	Parent statics → Child statics → Parent fields/blocks → Parent ctor → Child fields/blocks → Child ctor
+When is the default constructor generated?	Only when NO constructor is declared at all
+Java 25 constructor prologue may do?	Validate/throw, compute, assign OWN fields — before super()/this()
+Java 25 constructor prologue may NOT do?	Use `this` (read fields / call instance methods), return, or have 2+ super()/this() calls
+Covariant return types allowed for?	Reference types only (subtype); primitives must match exactly
+Overriding: exception rule?	Same/fewer/narrower CHECKED exceptions; unchecked are always free
+static method "overridden" in subclass?	It's HIDDEN — resolved by REFERENCE type, not runtime type
+Fields with same name in parent/child?	Fields are hidden — reference type decides
+Interface method implicit modifiers?	public abstract (fields: public static final)
+Two interfaces, same default method?	Class MUST override; delegate via InterfaceName.super.method()
+Interface static methods inherited?	No — must call via the interface name
+var x = null;?	Compile error — no type to infer
+Record accessor for component x?	x() — not getX()
+Records can extend a class?	No (extend Record implicitly); CAN implement interfaces
+Extra instance fields in a record?	Forbidden — compile error (static fields OK)
+Compact constructor syntax?	Record name + braces, NO parentheses; reassigns parameters; fields assigned implicitly after
+Non-canonical record constructors must?	Delegate via this(...) as the first statement
+Enum constructor access?	Implicitly private (private or default only)
+Season.valueOf("winter") — constant is WINTER?	IllegalArgumentException — case-sensitive
+Enum ordinal() starts at?	0
+Permitted subclass of sealed type must be?	final, sealed, or non-sealed (exactly one)
+When can permits be omitted?	All subtypes in the same source file
+Why no default needed for sealed switch?	Compiler knows all subtypes → provably exhaustive
+Checked vs unchecked rule?	RuntimeException + Error (and subclasses) = unchecked; other Exceptions = checked
+catch child after catch parent?	Wrong order = unreachable = compile error (child must come first)
+return in finally?	Overrides try/catch returns AND swallows exceptions — legal but evil
+try { return x; } finally { x=99; } returns?	Original x — return value computed before finally
+Multi-catch restriction?	Types cannot be in a parent/child relationship; variable implicitly final
+try-with-resources closing order?	REVERSE declaration order, before catch/finally
+Suppressed exception rule?	try throws primary; close() exceptions attach via getSuppressed(). finally exceptions REPLACE (not suppress)
+Resource must implement?	AutoCloseable (close() throws Exception); Closeable narrows to IOException
+throw null;?	Compiles; throws NullPointerException at runtime
+Arrays.binarySearch miss return?	-(insertionPoint) - 1 (array must be sorted)
+Arrays.mismatch identical arrays?	-1 (else index of first difference)
+Object[] o = new String[1]; o[0]=42;?	Compiles (arrays covariant); ArrayStoreException at runtime
+int[] b, c[]; types?	b: int[], c: int[][]
+List.of(...).add?	UnsupportedOperationException (fully immutable; nulls→NPE)
+Arrays.asList(arr) allows which mutation?	set() only (writes through); add/remove throw UnsupportedOperationException
+list.remove(1) on List<Integer>?	Removes INDEX 1 — use remove(Integer.valueOf(1)) for the value
+TreeSet with null element?	NullPointerException
+TreeSet of non-Comparable without Comparator?	ClassCastException at runtime on add
+map.merge fn returns null?	The key is REMOVED
+Deque pop() vs poll() on empty?	pop: NoSuchElementException; poll: null
+Modify list during for-each?	ConcurrentModificationException
+PECS?	Producer Extends (read only), Consumer Super (can add)
+List<? extends Number>.add(1)?	Compile error — cannot add (except null)
+List<Object> l = new ArrayList<String>();?	Compile error — generics are invariant
+Generic method type parameter position?	Before the return type: static <T> T f(...)
+Supplier/Consumer/Predicate/Function methods?	get() / accept(T) / test(T)→boolean / apply(T)→R
+Lambda captures locals that are?	Effectively final
+f1.andThen(f2) vs f1.compose(f2)?	andThen: f1 first. compose: f2 first
+String::startsWith (unbound) equals lambda?	(s, prefix) -> s.startsWith(prefix) — first arg becomes receiver
+Reuse a stream after terminal op?	IllegalStateException
+Stream pipeline with no terminal op?	Nothing executes (lazy)
+allMatch on empty stream?	true (anyMatch: false, noneMatch: true)
+Optional.orElse vs orElseGet?	orElse ALWAYS evaluates its arg; orElseGet only when empty
+Optional.of(null)?	NullPointerException (use ofNullable)
+stream.toList() mutability?	Unmodifiable list
+Collectors.toMap duplicate keys?	IllegalStateException — unless a merge function (3rd arg) is given
+partitioningBy result keys?	Always exactly true AND false (possibly empty lists)
+IntStream.range(0,5) vs rangeClosed?	0..4 vs 0..5
+Gatherers.windowFixed(2) on [1..5]?	[[1,2],[3,4],[5]] — last window partial
+Gatherers.windowSliding(2) on [1..4]?	[[1,2],[2,3],[3,4]]
+Gatherers.scan vs fold?	scan emits every running result; fold emits ONE final element (both intermediate ops via gather)
+Gatherers.mapConcurrent(n, fn)?	Concurrent mapping, max n at once, preserves encounter order
+takeWhile / dropWhile on [1,2,5,1] with x<3?	take: [1,2] — stops at 5. drop: [5,1]
+thread.run() vs start()?	run: executes on current thread. start: new thread (twice → IllegalThreadStateException)
+Virtual threads daemon status?	Always daemon; setDaemon(false) throws
+JEP 491 (Java 24) fixed?	synchronized no longer pins virtual threads to carriers
+submit(Runnable).get() returns?	null (Callable returns its value)
+Exception inside submitted task surfaces as?	ExecutionException from future.get()
+scheduleAtFixedRate vs WithFixedDelay?	Rate: fixed clock period. Delay: waits AFTER each completion
+AtomicInteger(5).getAndIncrement() prints?	5 (returns old; incrementAndGet returns new = 6)
+ConcurrentHashMap null key/value?	NullPointerException — neither allowed
+CopyOnWriteArrayList iteration?	Snapshot — never ConcurrentModificationException; writes copy the array
+ScopedValue.get() outside binding?	NoSuchElementException (isBound()==false; use orElse)
+ScopedValue mutation?	Impossible — no set(); rebind by nesting where(...) scopes
+ReentrantLock golden rule?	unlock() in finally; tryLock() returns boolean; unlocking unheld lock → IllegalMonitorStateException
+Path.of("/a/b/c").getNameCount()?	3 — root not counted (getName(0) = a)
+p1.resolve(absolutePath)?	Returns the absolute argument — receiver ignored
+relativize with mixed absolute/relative?	IllegalArgumentException
+Files.lines() vs readAllLines()?	lines: lazy stream, MUST close. readAllLines: eager List
+Files.copy on a directory?	Creates an EMPTY directory (shallow copy)
+createDirectory vs createDirectories?	createDirectory needs existing parent (else IOException); createDirectories makes the chain
+transient int after deserialization?	0 — default value; static fields also not serialized
+Constructors during deserialization?	Skipped for serializable classes; no-arg ctor of first NON-serializable superclass runs
+BufferedReader.readLine() at EOF?	null
+Reader new methods (Java 25)?	readAllLines() → List<String>, readAllAsString(), Reader.of(CharSequence)
+java.lang.IO methods?	println, print, readln(prompt), readln — static; implicit in compact source files
+Compact source file implicit imports?	import module java.base + IO available; class is implicit, unnamed package
+main method selection priority (Java 25)?	static main(String[]) → static main() → instance main(String[]) → instance main()
+import module java.base does what?	Imports all packages EXPORTED by the module (+ transitive re-exports); ambiguity fixed by single-type import
+exports vs opens?	exports: compile+runtime API access. opens: runtime deep reflection only
+requires transitive?	My readers automatically read that module too (implied readability)
+Automatic module?	Plain JAR on module path; name from manifest Automatic-Module-Name or filename; exports everything
+Which module is implicitly required?	java.base
+Unnamed module rules?	Classpath code; reads everything; named modules cannot requires it
+ResourceBundle search order for fr_TN (default en_US), base Msg?	Msg_fr_TN → Msg_fr → Msg_en_US → Msg_en → Msg → MissingResourceException
+Missing key in chosen bundle?	Falls back up parent chain; if nowhere → MissingResourceException
+Locale format convention?	language lowercase + COUNTRY uppercase: fr_TN; create via Locale.of("fr","TN")
+CompactNumberFormat SHORT for 7,123,456 (US)?	7M
+NumberFormat.parse("12abc") returns / throws?	Returns 12 (leading part); throws CHECKED ParseException when unparseable
+DecimalFormat # vs 0?	# = digit optional, 0 = digit forced
+1Z0-831 exam facts?	50 questions, 90 minutes, 68% to pass
+Where do local variables live, and where do objects live?	Locals → stack (current frame); ALL objects/arrays → heap.
+What does a reference variable actually store?	The address ("arrow") of a heap object — never the object itself.
+Java parameter passing in one sentence?	Always pass-by-value; for references the copied value IS the arrow — mutation visible, reassignment not.
+When is an object eligible for GC?	When unreachable from any live thread stack or static field (islands of isolation included).
+StackOverflowError vs OutOfMemoryError?	Stack exhausted (deep recursion) vs heap exhausted (too many live objects).
+JDK vs JRE vs JVM?	JDK ⊃ JRE ⊃ JVM: dev tools ⊃ libraries ⊃ the bytecode-executing engine.
+"ja"+"va" == "java" — true or false, and why?	true — compile-time constant folding puts it in the String pool.
+new String("x") == "x"?	false — new forces a fresh non-pool object; equals() is true.
+What does intern() return?	The pooled instance of that character sequence (adds it if absent).
+Integer wrapper cache range?	−128 to 127 — == may be true inside, unreliable outside; always use equals().
+Does final List<Integer> prevent list.add(1)?	No — final freezes the REFERENCE, the object stays mutable.
+Are record components deeply immutable?	No — the arrows are final, but referenced objects (e.g. lists) can mutate; use defensive copies.
+Minor GC vs Major GC?	Minor = young gen (Eden + survivors), frequent & fast; Major = old gen, rarer & heavier.
+What is Eden?	The young-gen area where all new objects are allocated.
+Can System.gc() force collection?	No — it is only a request/hint to the JVM.
+Why is == safe for enum constants?	Each constant is a single static instance (a true singleton).
+Do generics exist at runtime?	No — type erasure: the heap object is raw; List<String> is compile-time only.
+Where do virtual thread stacks live?	On the heap — that's why millions are cheap; they mount onto few carrier threads.
