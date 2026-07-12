@@ -3,7 +3,7 @@
 > **by Yassin Ghariani — JavaBoy ☕** · Print it. Tape it to your wall. Re-derive it from memory every Sunday (that's the trick — the *rewriting* is the studying).
 
 ## ⚡ Numbers to know cold
-`50 questions · 90 min · 68% to pass (34 correct) · multiple choice, some multi-select (count is shown)`
+`50 questions · 120 min · 68% to pass (34 correct) · multiple choice, some multi-select (count is shown)`
 
 ## 1️⃣ Types & operators
 - Integral default = `int`, decimal default = `double`. Suffixes: `L`, `f`/`F`, `d`/`D`.

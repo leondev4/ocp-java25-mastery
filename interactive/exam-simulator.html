@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏛️ 1Z0-831 Exam Simulator — by Yassin Ghariani (JavaBoy)</title>
+<style>
+  :root{--bg:#0b0f17;--panel:#111827;--panel2:#0d1522;--line:#233046;--txt:#e6edf7;--dim:#8b98ad;
+    --blue:#4da3ff;--green:#37c871;--amber:#ffb84d;--pink:#ff6b8f;--purple:#b48cff;
+    --mono:'JetBrains Mono','Fira Code',Consolas,monospace}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px 18px 80px}
+  a{color:var(--blue)}
+  .btn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:9px 18px;border-radius:10px;cursor:pointer;font-size:.92rem}
+  .btn:hover{border-color:var(--blue)}
+  .btn.primary{background:var(--blue);border-color:var(--blue);color:#04101f;font-weight:700}
+  .btn.danger{background:var(--pink);border-color:var(--pink);color:#04101f;font-weight:700}
+  .btn.ghost{background:transparent}
+  /* welcome */
+  #welcome{text-align:center;padding-top:8vh}
+  #welcome h1{font-size:2rem;margin-bottom:6px}
+  #welcome .sub{color:var(--dim);margin-bottom:26px}
+  #welcome .sub b{color:var(--amber)}
+  .rules{max-width:620px;margin:0 auto 26px;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 22px;font-size:.93rem;line-height:1.9;color:var(--dim)}
+  .rules b{color:var(--txt)}
+  .history{max-width:620px;margin:22px auto 0;font-size:.85rem;color:var(--dim)}
+  .history .h{display:flex;gap:14px;justify-content:center;font-family:var(--mono);padding:3px 0}
+  .history .h .p{color:var(--green)} .history .h .f{color:var(--pink)}
+  /* exam header */
+  #exam{display:none}
+  .ebar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin-bottom:14px;position:sticky;top:8px;z-index:5}
+  .ebar .qno{font-family:var(--mono);font-size:.9rem;color:var(--dim)}
+  .ebar .timer{margin-left:auto;font-family:var(--mono);font-size:1.3rem;font-weight:800;color:var(--green)}
+  .ebar .timer.low{color:var(--amber)} .ebar .timer.crit{color:var(--pink);animation:blink 1s steps(2) infinite}
+  @keyframes blink{50%{opacity:.35}}
+  .elayout{display:grid;grid-template-columns:1fr 230px;gap:14px;align-items:start}
+  @media(max-width:840px){.elayout{grid-template-columns:1fr}}
+  .qcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .qtopic{padding:9px 16px;border-bottom:1px solid var(--line);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);display:flex;justify-content:space-between}
+  .qtopic .sel{color:var(--amber)}
+  .qtext{padding:16px 18px 4px;font-size:1rem;line-height:1.6}
+  pre.qc{font-family:var(--mono);font-size:.88rem;line-height:1.7;background:#05070c;border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:12px 18px;overflow-x:auto;white-space:pre}
+  .opts{display:grid;gap:9px;padding:12px 18px 18px}
+  .opt{display:flex;gap:12px;align-items:flex-start;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:11px 14px;cursor:pointer;font-size:.92rem;font-family:var(--mono);transition:.12s;text-align:left;color:var(--txt);white-space:pre-wrap}
+  .opt:hover{border-color:var(--blue)}
+  .opt .box{flex:none;width:19px;height:19px;border:1.6px solid #33445f;border-radius:6px;margin-top:1px;display:grid;place-items:center;font-size:.7rem;color:transparent}
+  .opt.radio .box{border-radius:50%}
+  .opt.sel{border-color:var(--blue);background:#14284a}
+  .opt.sel .box{background:var(--blue);border-color:var(--blue);color:#04101f;font-weight:900}
+  .opt.rv-ok{border-color:var(--green);background:#12301f}
+  .opt.rv-ok .box{background:var(--green);border-color:var(--green);color:#04101f}
+  .opt.rv-miss{border-color:var(--pink);background:#2a1420}
+  .qnav{display:flex;gap:10px;padding:0 18px 18px;flex-wrap:wrap}
+  .qnav .spacer{flex:1}
+  .mark{color:var(--amber)}
+  /* navigator */
+  .navcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .navcard h4{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);margin-bottom:10px}
+  .navgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .cell{aspect-ratio:1;display:grid;place-items:center;font-family:var(--mono);font-size:.72rem;border-radius:8px;border:1px solid var(--line);background:var(--panel2);cursor:pointer;color:var(--dim)}
+  .cell.cur{outline:2px solid var(--blue);color:var(--txt)}
+  .cell.ans{background:#12301f;border-color:#2f5e42;color:var(--green)}
+  .cell.mk{background:#3d2e1f;border-color:var(--amber);color:var(--amber)}
+  .cell.rv-ok{background:#12301f;border-color:var(--green);color:var(--green)}
+  .cell.rv-bad{background:#2a1420;border-color:var(--pink);color:var(--pink)}
+  .legend{font-size:.7rem;color:var(--dim);margin-top:10px;line-height:1.9}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+  /* results */
+  #results{display:none;text-align:center;padding-top:4vh}
+  #results h1{font-size:2.2rem;margin-bottom:4px}
+  #results .verdict{font-size:1rem;color:var(--dim);margin-bottom:24px}
+  .scorewheel{font-family:var(--mono);font-size:3.4rem;font-weight:900;margin:10px 0}
+  .pass{color:var(--green)}.fail{color:var(--pink)}
+  .topics{max-width:640px;margin:20px auto;text-align:left}
+  .trow{display:grid;grid-template-columns:220px 1fr 60px;gap:10px;align-items:center;font-size:.85rem;padding:5px 0}
+  .trow .bar{height:9px;background:var(--panel2);border-radius:5px;overflow:hidden}
+  .trow .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--green))}
+  .trow .bar i.weak{background:linear-gradient(90deg,var(--pink),var(--amber))}
+  .trow .pc{font-family:var(--mono);text-align:right;color:var(--dim)}
+  .expl{margin:0 18px 16px;background:#0d1522;border-left:4px solid var(--amber);border-radius:10px;padding:12px 16px;font-size:.9rem;text-align:left;line-height:1.6}
+  .expl b{color:var(--amber)}
+  footer{position:fixed;bottom:0;left:0;right:0;background:rgba(11,15,23,.93);border-top:1px solid var(--line);padding:8px 24px;font-size:.76rem;color:var(--dim);text-align:center}
+  footer b{color:var(--amber)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- WELCOME -->
+  <section id="welcome">
+    <h1>🏛️ 1Z0-831 Exam Simulator</h1>
+    <div class="sub">the real thing, rehearsed · <b>50 questions · 120 minutes · 68% to pass</b> · by <b style="color:var(--amber)">Yassin Ghariani — JavaBoy ☕</b></div>
+    <div class="rules">
+      <b>Rules of engagement (same as exam day):</b><br>
+      • One sitting. No pause button exists here, because none exists there.<br>
+      • Multi-select questions state <b>exactly how many</b> to choose — the counter enforces it.<br>
+      • 🚩 <b>Mark</b> anything you're unsure of and move on — the navigator brings you back.<br>
+      • The timer turns amber at 20:00 and red at 10:00.<br>
+      • Submitting shows pass/fail, a per-topic breakdown, and full review with explanations.<br>
+      • Log your score in the <a href="dashboard.html">Command Center</a> afterwards — the booking gate is watching.
+    </div>
+    <button class="btn primary" style="font-size:1.05rem;padding:13px 34px" onclick="startExam()">Begin exam ▶</button>
+    <div class="history" id="history"></div>
+  </section>
+
+  <!-- EXAM -->
+  <section id="exam">
+    <div class="ebar">
+      <span class="qno" id="qno"></span>
+      <button class="btn ghost" id="markbtn" onclick="toggleMark()">🚩 Mark</button>
+      <span class="timer" id="timer">120:00</span>
+    </div>
+    <div class="elayout">
+      <div class="qcard">
+        <div class="qtopic"><span id="qtopic"></span><span class="sel" id="qsel"></span></div>
+        <div class="qtext" id="qtext"></div>
+        <pre class="qc" id="qcode" style="display:none"></pre>
+        <div class="opts" id="qopts"></div>
+        <div class="expl" id="qexpl" style="display:none"></div>
+        <div class="qnav">
+          <button class="btn" onclick="nav(-1)">◀ Previous</button>
+          <button class="btn" onclick="nav(1)">Next ▶</button>
+          <span class="spacer"></span>
+          <button class="btn danger" id="submitbtn" onclick="confirmSubmit()">Submit exam</button>
+          <button class="btn primary" id="backbtn" style="display:none" onclick="showResults()">◀ Back to results</button>
+        </div>
+      </div>
+      <div class="navcard">
+        <h4 id="navtitle">Navigator</h4>
+        <div class="navgrid" id="navgrid"></div>
+        <div class="legend" id="navlegend">
+          <i style="background:#12301f;border:1px solid #2f5e42"></i>answered<br>
+          <i style="background:#3d2e1f;border:1px solid var(--amber)"></i>🚩 marked<br>
+          <i style="background:var(--panel2);border:1px solid var(--line)"></i>unanswered
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results">
+    <h1 id="rtitle"></h1>
+    <div class="scorewheel" id="rscore"></div>
+    <div class="verdict" id="rverdict"></div>
+    <div>
+      <button class="btn primary" onclick="enterReview()">🔍 Review all questions</button>
+      <button class="btn" onclick="location.reload()">↺ New attempt (reshuffled)</button>
+    </div>
+    <div class="topics" id="rtopics"></div>
+  </section>
+</div>
+<footer>Simulator scoring mirrors the real exam: partial credit is <b>not</b> given on multi-select. Built with ❤ by <b>Yassin Ghariani — JavaBoy ☕</b></footer>
+
+<script>
+/* BANK format: {t:'Topic', q:'text', c:'code'|null, o:[...], a:[indices], n:howManyToChoose} */
+const BANK=[
+{t:'Basics & Operators',q:'What prints?',c:'int i = 5;\nSystem.out.print(i++ + ++i);',o:['10','11','12','13'],a:[2],n:1,e:'i++ yields 5 (i becomes 6), ++i yields 7 → 5+7 = <b>12</b>.'},
+{t:'Basics & Operators',q:'Which TWO compile?',c:'byte b = 10;',o:['b = b * 2;','b *= 2;','b = 20;','b = 128;'],a:[1,2],n:2,e:'b*2 is an int → needs a cast. Compound *= has an implicit cast. 20 is an in-range constant. 128 is out of byte range.'},
+{t:'Basics & Operators',q:'What prints?',c:'double d = 1 / 2;\nSystem.out.print(d);',o:['0.5','0','0.0','compile error'],a:[2],n:1,e:'1/2 is INT division = 0, then widened to 0.0. Division happens before assignment.'},
+{t:'Basics & Operators',q:'What prints?',c:'System.out.print(\u0027a\u0027 + 1);',o:['a1','b','98','compile error'],a:[2],n:1,e:'char + int promotes to int: 97 + 1 = <b>98</b>. Printing (char)(\u0027a\u0027+1) would give b.'},
+{t:'Basics & Operators',q:'Which line fails to compile?',c:'long a = 5_000_000_000L;  // A\nlong b = 5_000_000_000;   // B\nfloat f = 1.5f;           // C\ndouble d = 1.5;           // D',o:['A','B','C','D'],a:[1],n:1,e:'An integer literal is an int by default — 5 billion overflows int at COMPILE time without the L suffix.'},
+{t:'Basics & Operators',q:'What prints?',c:'int i = 0;\nif (false && ++i == 1) { }\nSystem.out.print(i);',o:['0','1','compile error'],a:[0],n:1,e:'&& short-circuits: the right side (and its ++) never evaluates.'},
+{t:'Strings',q:'What prints?',c:'System.out.print("JavaBoy".substring(1, 4));',o:['ava','avaB','Jav','av'],a:[0],n:1,e:'substring(begin, end): begin inclusive, end EXCLUSIVE → indexes 1,2,3 → "ava".'},
+{t:'Strings',q:'What prints?',c:'var sb = new StringBuilder("abcdef");\nsb.delete(1, 3).insert(2, "X");\nSystem.out.print(sb);',o:['adXef','aXdef','abXcdef','adefX'],a:[0],n:1,e:'delete(1,3) removes b,c → "adef"; insert at index 2 → "ad<b>X</b>ef". One mutable object throughout.'},
+{t:'Strings',q:'Which TWO print true?',o:['"ja" + "va" == "java"','new String("java") == "java"','"java".equals(new String("java"))','"Java" == "java"'],c:null,a:[0,2],n:2,e:'Constant folding pools the concatenation (true). new String is a distinct object (false with ==, true with equals). Case differs in the last.'},
+{t:'Strings',q:'What prints?',c:'System.out.print("  Java  ".strip().length());',o:['4','6','8','5'],a:[0],n:1,e:'strip() removes leading and trailing whitespace (Unicode-aware) → "Java" → 4.'},
+{t:'Strings',q:'What prints?',c:'String s = "hello";\ns.replace(\u0027l\u0027, \u0027L\u0027);\nSystem.out.print(s.indexOf(\u0027L\u0027));',o:['2','-1','3','0'],a:[1],n:1,e:'replace returns a NEW string that was discarded; s is unchanged → indexOf(L) = <b>-1</b>.'},
+{t:'Flow & Switch',q:'What prints?',c:'int x = 3;\nvar r = switch (x) {\n    case 1, 2 -> "low";\n    case 3, 4 -> { yield "mid"; }\n    default -> "high";\n};\nSystem.out.print(r);',o:['low','mid','high','compile error'],a:[1],n:1,e:'Block cases in switch expressions return values with <b>yield</b>. Multiple labels per case are fine.'},
+{t:'Flow & Switch',q:'What is the result?',c:'Object o = "hi";\nvar r = switch (o) {\n    case Object obj -> "any";\n    case String s -> "str";\n};',o:['any','str','compile error: dominated case','runtime error'],a:[2],n:1,e:'case Object DOMINATES case String — the String case is unreachable → compile error. Specific cases must come first.'},
+{t:'Flow & Switch',q:'Which fails to compile?',o:['if (false) System.out.print(1);','while (false) System.out.print(1);','for (int i = 0; i < 0; i++) System.out.print(1);','do System.out.print(1); while (false);'],c:null,a:[1],n:1,e:'while(false) makes the body UNREACHABLE → compile error. if(false) is explicitly allowed (the conditional-compilation idiom). i < 0 is not a compile-time constant, so C is legal. do-while always reaches its body once.'},
+{t:'Flow & Switch',q:'What prints?',c:'outer:\nfor (int i = 0; i < 3; i++) {\n    for (int j = 0; j < 3; j++) {\n        if (j == 1) continue outer;\n        System.out.print(i + "" + j);\n    }\n}',o:['000102','001020','000010','001122'],a:[1],n:1,e:'j==1 jumps to the NEXT i. Printed pairs: 00, 10, 20.'},
+{t:'Flow & Switch',q:'What prints?',c:'int i = 2;\nswitch (i) {\n    default: System.out.print("D");\n    case 3: System.out.print("3");\n}',o:['D','D3','3','nothing'],a:[1],n:1,e:'i=2 matches nothing → enters at default, then FALLS THROUGH into case 3 → "D3". Default position matters in old-style switch.'},
+{t:'OOP',q:'What prints?',c:'class A { String s = "A"; String m() { return "a"; } }\nclass B extends A { String s = "B"; String m() { return "b"; } }\n// main:\nA x = new B();\nSystem.out.print(x.s + x.m());',o:['Aa','Ab','Bb','Ba'],a:[1],n:1,e:'Fields → reference type (A). Instance methods → runtime object (B). The single most tested OOP rule.'},
+{t:'OOP',q:'What prints?',c:'class P { P() { System.out.print("P"); }\n          P(int x) { System.out.print("Px"); } }\nclass C extends P {\n    C() { this(5); System.out.print("C"); }\n    C(int x) { System.out.print("Cx"); }\n}\nnew C();',o:['PCxC','PxCxC','PCCx','CxC'],a:[0],n:1,e:'C() → this(5) → C(int): implicit super() prints P, then Cx, back in C() prints C → <b>PCxC</b>.'},
+{t:'OOP',q:'Two interfaces both declare default String id() { ... }. A class implements both. What must the class do?',o:['nothing, first interface wins','override id() itself','declare itself abstract only','it cannot implement both'],c:null,a:[1],n:1,e:'Diamond default conflict → the class MUST override (it may delegate: InterfaceA.super.id()).'},
+{t:'OOP',q:'Valid override of "protected Number get() throws IOException"? (Choose TWO)',o:['public Integer get()','private Number get() throws IOException','protected Number get() throws Exception','public Number get() throws FileNotFoundException'],c:null,a:[0,3],n:2,e:'Overrides may WIDEN access, NARROW the return (covariant), and NARROW checked throws. B narrows access; C widens throws.'},
+{t:'OOP',q:'What prints?',c:'void m(int x)     { System.out.print("int"); }\nvoid m(Integer x) { System.out.print("Integer"); }\nvoid m(Object x)  { System.out.print("Object"); }\n// call:\nm(7);',o:['int','Integer','Object','ambiguous'],a:[0],n:1,e:'Overload resolution order: exact primitive match first, then widening, then boxing, then varargs.'},
+{t:'OOP',q:'In a Java 25 constructor prologue (before super), which is ILLEGAL?',c:'class C extends P {\n    int v;\n    C(int x) {\n        var y = x * 2;          // A\n        v = y;                  // B\n        System.out.print(v);    // C\n        super(y);\n    }\n}',o:['A','B','C','all legal'],a:[2],n:1,e:'Locals (A) and assigning OWN fields (B) are allowed; READING a field (C) uses this → forbidden before super().'},
+{t:'OOP',q:'What prints?',c:'class P { static String who() { return "P"; } }\nclass C extends P { static String who() { return "C"; } }\nP p = new C();\nSystem.out.print(p.who());',o:['P','C','compile error','runtime error'],a:[0],n:1,e:'Static methods HIDE, never override — resolved by the reference type at compile time.'},
+{t:'Records & Enums & Sealed',q:'What prints?',c:'record Pt(int x, int y) {}\nSystem.out.print(new Pt(1,2).equals(new Pt(1,2)));',o:['true','false','compile error'],a:[0],n:1,e:'Records auto-generate component-based equals/hashCode/toString.'},
+{t:'Records & Enums & Sealed',q:'Enum E { A, B }. What does E.valueOf("a") do?',o:['returns A','returns null','IllegalArgumentException','compile error'],c:null,a:[2],n:1,e:'valueOf is CASE-SENSITIVE and throws IllegalArgumentException for unknown names.'},
+{t:'Records & Enums & Sealed',q:'sealed class S permits A. A is declared non-sealed. Which is true?',o:['nobody can extend A','ANY class may now extend A','only classes in the file may extend A','non-sealed is a compile error under sealed'],c:null,a:[1],n:1,e:'non-sealed reopens that branch of the hierarchy to the whole world — the escape hatch of sealing.'},
+{t:'Records & Enums & Sealed',q:'Which TWO are legal inside record R(int a)?',o:['static int count;','int extra;','R { if (a < 0) throw new IllegalArgumentException(); }','void setA(int a) { this.a = a; }'],c:null,a:[0,2],n:2,e:'Statics and compact constructors are fine. Extra INSTANCE fields are forbidden; components are final so no setters.'},
+{t:'Exceptions',q:'What is returned?',c:'int m() {\n    try { return 1; }\n    finally { return 2; }\n}',o:['1','2','compile error','undefined'],a:[1],n:1,e:'return in finally OVERRIDES the try return (and would even swallow exceptions) — legal but evil.'},
+{t:'Exceptions',q:'Which multi-catch fails to compile?',o:['catch (IOException | SQLException e)','catch (FileNotFoundException | IOException e)','catch (RuntimeException | Error e)','catch (IllegalStateException | IllegalArgumentException e)'],c:null,a:[1],n:1,e:'Multi-catch types must not be in a subtype relationship — FileNotFoundException IS-A IOException.'},
+{t:'Exceptions',q:'try-with-resources: the body throws A, then close() throws B. What propagates?',o:['B, with A suppressed','A, with B suppressed','both merged into one','B only, A is lost'],c:null,a:[1],n:1,e:'The BODY exception wins; close-time exceptions attach via getSuppressed(). (Plain finally is the opposite: it REPLACES.)'},
+{t:'Exceptions',q:'What happens?',c:'void nap() {\n    Thread.sleep(100);\n}',o:['sleeps 100ms','compile error','InterruptedException at runtime','nothing'],a:[1],n:1,e:'sleep throws the CHECKED InterruptedException → must be caught or declared. Compile error as written.'},
+{t:'Collections & Generics',q:'What prints?',c:'var m = new HashMap<String,Integer>();\nm.put("a", 1);\nSystem.out.print(m.getOrDefault("b", 9) + m.merge("a", 5, Integer::sum));',o:['15','10','14','96'],a:[0],n:1,e:'getOrDefault("b",9) = 9; merge sums 1+5=6 and returns the NEW value → 9+6 = 15.'},
+{t:'Collections & Generics',q:'Set.of(1, 2, 1) results in…',o:['{1, 2}','IllegalArgumentException','UnsupportedOperationException','compile error'],c:null,a:[1],n:1,e:'The immutable factories REJECT duplicates at creation time (Map.of does the same for duplicate keys).'},
+{t:'Collections & Generics',q:'Which safely removes all even numbers from an ArrayList while iterating?',o:['for-each with list.remove(n)','list.removeIf(n -> n % 2 == 0)','iterator with it.remove()','both B and C'],c:null,a:[3],n:1,e:'removeIf and Iterator.remove are the two sanctioned ways; for-each + list.remove → ConcurrentModificationException.'},
+{t:'Collections & Generics',q:'What prints?',c:'var l = new ArrayList<>(List.of("bb", "a", "ccc"));\nl.sort(Comparator.comparing(String::length).reversed());\nSystem.out.print(l.get(0));',o:['a','bb','ccc'],a:[2],n:1,e:'Sort by length descending → "ccc" first.'},
+{t:'Collections & Generics',q:'Given List<? super Integer> list, which compiles? (Choose TWO)',o:['list.add(42);','Integer i = list.get(0);','Object o = list.get(0);','list.add("x");'],c:null,a:[0,2],n:2,e:'super = consumer: adding Integer ok; reading only gives Object. Strings never fit.'},
+{t:'Streams',q:'What prints?',c:'System.out.print(\n  Stream.of(1, 2, 3).reduce(1, Integer::sum));',o:['6','7','1','compile error'],a:[1],n:1,e:'reduce with identity 1: 1+1+2+3 = <b>7</b>. Identity must truly be an identity (0 for sum) or results skew — a favorite trap.'},
+{t:'Streams',q:'What prints?',c:'var r = Stream.of(List.of(1, 2), List.of(3))\n    .flatMap(List::stream)\n    .map(n -> n * n)\n    .toList();\nSystem.out.print(r);',o:['[1, 4, 9]','[[1,4],[9]]','[1, 2, 3]','compile error'],a:[0],n:1,e:'flatMap flattens the inner lists into one stream: 1,2,3 → squared → [1, 4, 9].'},
+{t:'Streams',q:'What prints?',c:'var m = Stream.of("aa", "ab", "bc")\n  .collect(Collectors.groupingBy(\n      s -> s.charAt(0), Collectors.counting()));\nSystem.out.print(m);',o:['{a=2, b=1}','{a=[aa, ab], b=[bc]}','{a=1, b=1}','compile error'],a:[0],n:1,e:'groupingBy + counting → key to Long count: a appears twice, b once.'},
+{t:'Streams',q:'What prints?',c:'var r = Stream.of(1, 2, 3, 4)\n    .gather(Gatherers.windowSliding(3))\n    .toList();\nSystem.out.print(r);',o:['[[1,2,3],[4]]','[[1,2,3],[2,3,4]]','[[1,2,3],[3,4]]','[[1,2],[3,4]]'],a:[1],n:1,e:'windowSliding slides by ONE and only emits FULL windows. windowFixed is the chunking one that keeps a partial tail.'},
+{t:'Streams',q:'What prints?',c:'System.out.print(\n  IntStream.rangeClosed(1, 4).sum());',o:['6','10','9','4'],a:[1],n:1,e:'rangeClosed includes the end: 1+2+3+4 = 10 (range(1,4) would give 6).'},
+{t:'Streams',q:'Which TWO are terminal operations?',o:['peek','count','sorted','anyMatch'],c:null,a:[1,3],n:2,e:'count and anyMatch consume the stream. peek and sorted are intermediate (lazy).'},
+{t:'Concurrency',q:'What prints?',c:'try (var ex = Executors.newFixedThreadPool(1)) {\n    Future<Integer> f = ex.submit(() -> 21 * 2);\n    System.out.print(f.get());\n}',o:['42','null','compile error','ExecutionException'],a:[0],n:1,e:'The lambda is a Callable<Integer>; get() blocks and returns 42. ExecutorService is AutoCloseable — close waits for tasks.'},
+{t:'Concurrency',q:'What prints?',c:'var t = Thread.ofVirtual().unstarted(() -> {});\nSystem.out.print(t.isDaemon() + "" + t.isVirtual());',o:['truetrue','falsetrue','truefalse','falsefalse'],a:[0],n:1,e:'Virtual threads are ALWAYS daemon (setDaemon(false) throws) and obviously virtual.'},
+{t:'Concurrency',q:'Which THREE make shared mutable state safe?',o:['synchronized blocks','volatile alone for i++','AtomicLong','ReentrantLock','making the field public'],c:null,a:[0,2,3],n:3,e:'Locks (synchronized/ReentrantLock) and atomics give atomicity. volatile alone cannot make read-modify-write atomic.'},
+{t:'Concurrency',q:'Iterating an ArrayList while another thread adds to it typically causes…',o:['deadlock','ConcurrentModificationException','silent corruption only','nothing, lists are safe'],c:null,a:[1],n:1,e:'Fail-fast iterators throw CME on structural change. Fixes: CopyOnWriteArrayList, ConcurrentHashMap views, or external locking.'},
+{t:'I/O & NIO.2',q:'A serialized object had: transient String name = "yg"; static int n = 7. After deserialization…',o:['name="yg", n current static value','name=null, n current static value','name=null, n=0','name="yg", n=0'],c:null,a:[1],n:1,e:'transient → default (null). static belongs to the class, not the object — it simply is whatever it is now.'},
+{t:'I/O & NIO.2',q:'What prints?',c:'Path a = Path.of("/x/y/z");\nPath b = Path.of("/x/w");\nSystem.out.print(a.relativize(b));',o:['../../w','../w','/x/w','w'],a:[0],n:1,e:'From z: up out of z, up out of y (../..), then into w → ../../w.'},
+{t:'I/O & NIO.2',q:'Which reads all lines of a large file MOST memory-efficiently?',o:['Files.readAllLines(p)','Files.lines(p) in try-with-resources','Files.readString(p).split','new Scanner into a List'],c:null,a:[1],n:1,e:'Files.lines streams lazily; readAllLines/readString load everything onto the heap. Close the stream!'},
+{t:'Modules & Localization',q:'Module app requires lib. lib declares "requires transitive java.sql". Can app use java.sql types without requiring it?',o:['yes','no','only with opens','only at runtime'],c:null,a:[0],n:1,e:'transitive = implied readability: whoever requires lib also reads java.sql.'},
+{t:'Modules & Localization',q:'Default locale en_US. Requested fr_FR. Files: Zoo.properties, Zoo_fr.properties, Zoo_en.properties. Which loads?',o:['Zoo_fr','Zoo_en','Zoo.properties','MissingResourceException'],c:null,a:[0],n:1,e:'Requested locale first: fr_FR missing → fr FOUND. The default-locale fallback only starts when the requested chain fails completely.'},
+{t:'Modules & Localization',q:'What prints?',c:'var nf = NumberFormat.getCurrencyInstance(Locale.US);\nSystem.out.print(nf.format(1234.567));',o:['$1,234.57','$1234.56','1 234,57 $','USD 1,234.567'],a:[0],n:1,e:'US currency: dollar sign, comma grouping, rounded to 2 fraction digits (HALF_EVEN by default).'},
+{t:'Date-Time',q:'What prints?',c:'var t1 = LocalTime.of(10, 0);\nvar t2 = LocalTime.of(12, 30);\nSystem.out.print(Duration.between(t1, t2));',o:['PT2H30M','P2H30M','2:30','PT150M'],a:[0],n:1,e:'Duration toString = ISO: PT2H30M (P for period, T separates time part).'},
+{t:'Date-Time',q:'Which type answers "exactly which moment in world time"?',o:['LocalDateTime','Instant','LocalDate','Period'],c:null,a:[1],n:1,e:'Instant = machine timestamp on the UTC line. LocalDateTime has NO zone — it cannot identify a global moment.'},
+{t:'Date-Time',q:'New York, fall-back night (clocks repeat 1–2 AM). ZonedDateTime at the ambiguous 01:30 resolves to…',o:['the EARLIER offset by default','the later offset by default','an exception','midnight'],c:null,a:[0],n:1,e:'Ambiguous times take the earlier offset; opt into the second pass with withLaterOffsetAtOverlap(). That day is 25h long.'},
+{t:'Date-Time',q:'Pattern "dd/MM/yy hh:mm a" formatting 2026-07-06T14:05 gives…',o:['06/07/26 02:05 PM','06/07/26 14:05 PM','07/06/26 02:05 PM','runtime exception'],a:[0],n:1,e:'dd/MM order, hh = 12-hour clock (needs a), 14:05 → 02:05 PM.'},
+{t:'Java 25 Features',q:'Which is a COMPLETE valid program file in Java 25? (Choose TWO)',o:['void main() { IO.println("a"); }','static void main(String[] a) { IO.println("b"); }','public class X { }  // no main','main() { }'],c:null,a:[0,1],n:2,e:'Compact source files accept instance or static main, with or without args. D lacks a return type; C has no main to launch (compiles but cannot run).'},
+{t:'Java 25 Features',q:'What does "import module java.sql;" provide?',o:['every java.sql.* class only','all packages EXPORTED by java.sql AND its transitive requires','the whole JDK','only in compact files'],c:null,a:[1],n:1,e:'Module imports bring all exported packages of the module plus modules it requires transitively. Works in any source file.'},
+];
+
+const PASS=0.68, MINUTES=120;
+let Q=[],cur=0,answers=[],marks=[],mode='exam',endTime=0,tick=null,finished=null;
+const $=id=>document.getElementById(id);
+
+function startExam(){
+  Q=[...BANK].sort(()=>Math.random()-.5).slice(0,50);
+  answers=Q.map(()=>[]);marks=Q.map(()=>false);cur=0;mode='exam';
+  $('welcome').style.display='none';$('exam').style.display='block';
+  endTime=Date.now()+MINUTES*60*1000;
+  tick=setInterval(tickFn,500);tickFn();paint();
+}
+function tickFn(){
+  const left=Math.max(0,Math.round((endTime-Date.now())/1000));
+  const m=Math.floor(left/60),s=left%60;
+  const el=$('timer');el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  el.className='timer'+(left<=600?' crit':left<=1200?' low':'');
+  if(left===0){clearInterval(tick);submit(true)}
+}
+function paint(){
+  const q=Q[cur];
+  $('qno').textContent=`Question ${cur+1} / ${Q.length}`;
+  $('qtopic').textContent=q.t;
+  $('qsel').textContent=q.n>1?`choose ${q.n}`:'choose 1';
+  $('qtext').textContent=q.q;
+  if(q.c){$('qcode').style.display='block';$('qcode').textContent=q.c}else $('qcode').style.display='none';
+  $('markbtn').textContent=marks[cur]?'🚩 Marked':'🚩 Mark';
+  $('markbtn').className='btn ghost'+(marks[cur]?' mark':'');
+  const review=mode==='review';
+  $('qopts').innerHTML=q.o.map((o,i)=>{
+    const sel=answers[cur].includes(i);
+    let cls='opt'+(q.n===1?' radio':'')+(sel?' sel':'');
+    if(review){
+      if(q.a.includes(i))cls+=' rv-ok';
+      else if(sel)cls+=' rv-miss';
+    }
+    return `<button class="${cls}" ${review?'disabled':''} onclick="choose(${i})"><span class="box">✓</span><span>${esc(o)}</span></button>`;
+  }).join('');
+  if(review){
+    $('qexpl').style.display='block';
+    const ok=sameSet(answers[cur],q.a);
+    $('qexpl').innerHTML=(ok?'✅ <b>Correct.</b> ':'❌ <b>Missed.</b> ')+q.e;
+    $('submitbtn').style.display='none';$('backbtn').style.display='inline-block';
+    $('navtitle').textContent='Review map';
+    $('navlegend').innerHTML='<i style="background:#12301f;border:1px solid var(--green)"></i>correct<br><i style="background:#2a1420;border:1px solid var(--pink)"></i>wrong / blank';
+  }else{
+    $('qexpl').style.display='none';
+    $('submitbtn').style.display='inline-block';$('backbtn').style.display='none';
+  }
+  $('navgrid').innerHTML=Q.map((qq,i)=>{
+    let cls='cell'+(i===cur?' cur':'');
+    if(review)cls+=sameSet(answers[i],qq.a)?' rv-ok':' rv-bad';
+    else{if(marks[i])cls+=' mk';else if(answers[i].length)cls+=' ans'}
+    return `<div class="${cls}" onclick="jump(${i})">${i+1}</div>`;
+  }).join('');
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function sameSet(a,b){return a.length===b.length&&[...a].sort().join()==[...b].sort().join()}
+function choose(i){
+  const q=Q[cur],A=answers[cur];
+  if(q.n===1)answers[cur]=[i];
+  else{
+    const at=A.indexOf(i);
+    if(at>=0)A.splice(at,1);
+    else{if(A.length>=q.n)A.shift();A.push(i)}
+  }
+  paint();
+}
+function toggleMark(){marks[cur]=!marks[cur];paint()}
+function nav(d){cur=Math.max(0,Math.min(Q.length-1,cur+d));paint()}
+function jump(i){cur=i;paint()}
+function confirmSubmit(){
+  const blank=answers.filter(a=>!a.length).length;
+  const marked=marks.filter(Boolean).length;
+  let msg='Submit the exam now?';
+  if(blank)msg+=`\n⚠️ ${blank} unanswered question(s) — they count as wrong.`;
+  if(marked)msg+=`\n🚩 ${marked} still marked for review.`;
+  if(confirm(msg))submit(false);
+}
+function submit(timeout){
+  clearInterval(tick);
+  const per={};let ok=0;
+  Q.forEach((q,i)=>{
+    per[q.t]=per[q.t]||{ok:0,n:0};per[q.t].n++;
+    if(sameSet(answers[i],q.a)){ok++;per[q.t].ok++}
+  });
+  finished={ok,total:Q.length,per,timeout,
+    used:MINUTES*60-Math.max(0,Math.round((endTime-Date.now())/1000))};
+  // history
+  try{
+    const h=JSON.parse(localStorage.getItem('ocp25-sim-history')||'[]');
+    h.push({d:new Date().toISOString().slice(0,10),score:ok,total:Q.length});
+    localStorage.setItem('ocp25-sim-history',JSON.stringify(h.slice(-12)));
+  }catch(e){}
+  showResults();
+}
+function showResults(){
+  mode='results';
+  $('exam').style.display='none';$('results').style.display='block';
+  const {ok,total,per,timeout,used}=finished;
+  const pct=ok/total,pass=pct>=PASS;
+  $('rtitle').textContent=pass?'🏆 PASS':'📚 Not yet';
+  $('rscore').innerHTML=`<span class="${pass?'pass':'fail'}">${ok}/${total} — ${Math.round(pct*100)}%</span>`;
+  const mm=Math.floor(used/60),ss=used%60;
+  $('rverdict').textContent=(timeout?'⏰ Time expired. ':'')+
+    `Passing bar: 68% (34/50) · time used ${mm}m ${String(ss).padStart(2,'0')}s · `+
+    (pass?'log this in the Command Center — the gate needs 3 in a row ≥ 80%.':'every miss goes in the Error Journal tonight. Review below, then retrain the weak topics.');
+  $('rtopics').innerHTML='<h4 style="color:var(--dim);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">Per-topic breakdown</h4>'+
+    Object.entries(per).sort((a,b)=>a[1].ok/a[1].n-b[1].ok/b[1].n).map(([t,v])=>{
+      const p=Math.round(v.ok/v.n*100);
+      return `<div class="trow"><span>${t}</span><span class="bar"><i class="${p<70?'weak':''}" style="width:${p}%"></i></span><span class="pc">${v.ok}/${v.n}</span></div>`;
+    }).join('');
+}
+function enterReview(){mode='review';cur=0;
+  $('results').style.display='none';$('exam').style.display='block';
+  $('timer').textContent='REVIEW';$('timer').className='timer';paint()}
+/* history on welcome */
+(function(){
+  try{
+    const h=JSON.parse(localStorage.getItem('ocp25-sim-history')||'[]');
+    if(h.length)$('history').innerHTML='<b style="color:var(--dim)">Previous attempts</b>'+
+      h.slice().reverse().map(x=>{const p=Math.round(x.score/x.total*100);
+        return `<div class="h"><span>${x.d}</span><span>${x.score}/${x.total}</span><span class="${p>=68?'p':'f'}">${p}% ${p>=68?'PASS':'fail'}</span></div>`}).join('');
+  }catch(e){}
+})();
+</script>
+</body>
+</html>

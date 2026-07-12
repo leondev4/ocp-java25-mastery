@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>☕ OCP Java 25 Mastery — by Yassin Ghariani (JavaBoy)</title>
+<meta name="description" content="Zero-to-certified Java SE 25 (1Z0-831): animated memory visualizers, a full exam simulator, a trap-trainer game, a command-center study board, diagrams, labs and a never-forget system. By Yassin Ghariani.">
+<style>
+  :root{--bg:#0b0f17;--panel:#111827;--panel2:#0d1522;--line:#233046;--txt:#e6edf7;--dim:#8b98ad;
+    --blue:#4da3ff;--green:#37c871;--amber:#ffb84d;--pink:#ff6b8f;--purple:#b48cff;
+    --mono:'JetBrains Mono','Fira Code',Consolas,monospace}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:0 20px 80px}
+  a{color:var(--blue);text-decoration:none}
+  .hero{text-align:center;padding:72px 10px 40px;background:
+    radial-gradient(600px 300px at 50% -40px, rgba(77,163,255,.14), transparent),
+    radial-gradient(500px 260px at 80% 10%, rgba(180,140,255,.08), transparent)}
+  .hero .cup{font-size:3.4rem}
+  .hero h1{font-size:clamp(1.7rem,4.5vw,2.7rem);margin:10px 0 8px}
+  .hero h1 b{background:linear-gradient(90deg,var(--blue),var(--purple),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{color:var(--dim);max-width:640px;margin:0 auto 8px;line-height:1.7}
+  .hero .by{color:var(--amber);font-weight:700;margin-bottom:26px}
+  .facts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:30px}
+  .facts span{font-family:var(--mono);font-size:.78rem;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:6px 14px;color:var(--dim)}
+  .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .cta a{padding:13px 26px;border-radius:12px;font-weight:700;font-size:.98rem;border:1px solid var(--line)}
+  .cta a.p{background:var(--blue);color:#04101f;border-color:var(--blue)}
+  .cta a.s{background:var(--panel);color:var(--txt)}
+  .cta a:hover{transform:translateY(-2px);transition:.15s}
+  h2{font-size:1.15rem;margin:44px 0 16px;letter-spacing:.02em}
+  h2 small{color:var(--dim);font-weight:400;font-size:.82rem;margin-left:8px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;display:block;color:var(--txt);transition:.15s}
+  .card:hover{border-color:var(--blue);transform:translateY(-3px)}
+  .card .ic{font-size:1.7rem}
+  .card h3{font-size:1rem;margin:8px 0 6px}
+  .card p{color:var(--dim);font-size:.85rem;line-height:1.6}
+  .card .tag{display:inline-block;margin-top:10px;font-family:var(--mono);font-size:.68rem;border:1px solid var(--line);border-radius:6px;padding:2px 8px;color:var(--amber)}
+  .path{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+  .step{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:.88rem;color:var(--dim);line-height:1.65}
+  .step b{color:var(--txt)}
+  .step .n{font-family:var(--mono);color:var(--blue);font-weight:800}
+  footer{border-top:1px solid var(--line);margin-top:60px;padding:22px;text-align:center;color:var(--dim);font-size:.82rem}
+  footer b{color:var(--amber)}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="cup">☕</div>
+  <h1>OCP <b>Java 25</b> Mastery</h1>
+  <p>The zero-to-certified repository for exam <b style="color:var(--txt)">1Z0-831</b> — read it, <i>see</i> it animated, play it, simulate it, and never forget it.</p>
+  <div class="by">by Yassin Ghariani — “JavaBoy”</div>
+  <div class="facts"><span>50 questions</span><span>120 minutes</span><span>68% to pass</span><span>13 modules</span><span>5 interactive apps</span><span>150+ flashcards</span></div>
+  <div class="cta">
+    <a class="p" href="interactive/dashboard.html">🎛️ Open the Command Center</a>
+    <a class="s" href="interactive/exam-simulator.html">🏛️ Take a full mock exam</a>
+  </div>
+</div>
+
+<div class="wrap">
+  <h2>🎬 Interactive apps <small>offline · no install · progress saves in your browser</small></h2>
+  <div class="cards">
+    <a class="card" href="interactive/dashboard.html"><div class="ic">🎛️</div><h3>Command Center</h3><p>Your whole prep on one board: module tracker, auto spaced-repetition queue, Pomodoro + 120-min exam chrono, mock gate, XP & streaks.</p><span class="tag">start here daily</span></a>
+    <a class="card" href="interactive/exam-simulator.html"><div class="ic">🏛️</div><h3>Exam Simulator</h3><p>Full 50-question, 120:00 rehearsal with navigator grid, mark-for-review, multi-select enforcement, per-topic results and explained review.</p><span class="tag">the dress rehearsal</span></a>
+    <a class="card" href="interactive/trap-trainer.html"><div class="ic">🎮</div><h3>Trap Trainer</h3><p>Rapid-fire quiz game: 50+ hand-built exam traps, instant explanations, score, streaks and topic filters. One round a day.</p><span class="tag">daily recall</span></a>
+    <a class="card" href="interactive/memory-visualizer.html"><div class="ic">🧠</div><h3>Memory Visualizer</h3><p>Watch the stack push frames, references point into the heap, the String pool share literals, and the GC age & promote survivors.</p><span class="tag">stack · heap · GC</span></a>
+    <a class="card" href="interactive/java-internals-visualizer.html"><div class="ic">⚙️</div><h3>Internals Visualizer</h3><p>Step-through animations of polymorphic dispatch, lazy stream pipelines with short-circuiting, and exceptions climbing the stack.</p><span class="tag">dispatch · streams · throws</span></a>
+  </div>
+
+  <h2>📚 The written arsenal</h2>
+  <div class="cards">
+    <a class="card" href="modules/00-start-here-zero-to-java/NOTES.md"><div class="ic">🐣</div><h3>Module 00 — Zero to Java</h3><p>Never coded? Start here: JVM/JDK/JRE, your first compact source file, and the stack-vs-heap mental model with diagrams.</p></a>
+    <a class="card" href="README.md"><div class="ic">🗺️</div><h3>The 13 Modules</h3><p>Every 1Z0-831 objective — notes full of ⚠️ traps, memory diagrams, runnable Java 25 labs and closed-book quizzes.</p></a>
+    <a class="card" href="docs/THE-WALL-CHEATSHEET.md"><div class="ic">🧱</div><h3>The Wall</h3><p>The entire exam compressed to one printable page. Rewrite it from memory every Sunday — that ritual IS the studying.</p></a>
+    <a class="card" href="docs/JAVA-MEMORY-EXPLAINED.md"><div class="ic">🔬</div><h3>Memory, Explained</h3><p>Stack, heap, string pool, wrapper caches, generational GC — and the memory truth behind every exam trap.</p></a>
+    <a class="card" href="docs/STUDY_STRATEGY.md"><div class="ic">🧠</div><h3>The Never-Forget System</h3><p>Active recall + spaced repetition (D1/3/7/14/30) + the Error Journal + the mock booking gate. Follow it exactly.</p></a>
+    <a class="card" href="docs/EXAM-DAY-PLAYBOOK.md"><div class="ic">🏁</div><h3>Exam-Day Playbook</h3><p>The 3-pass timing method, the compile-error-first checklist, and field intel from recent takers of this exam generation.</p></a>
+  </div>
+
+  <h2>🛣️ How to use this repo</h2>
+  <div class="path">
+    <div class="step"><span class="n">01</span><br><b>New to Java?</b> Module 00 + the Memory Visualizer until stack-vs-heap feels obvious. Experienced? Skim it anyway.</div>
+    <div class="step"><span class="n">02</span><br><b>Daily loop:</b> open the Command Center → start the chrono → do the next unticked task on the board → clear the review queue → one Trap Trainer round.</div>
+    <div class="step"><span class="n">03</span><br><b>Weekly:</b> rewrite The Wall from memory on Sunday, feed the gaps to Anki (deck included: <code>flashcards/</code>).</div>
+    <div class="step"><span class="n">04</span><br><b>From week 6:</b> full Exam Simulator sittings. Three in a row ≥ 80% opens the booking gate. Then the Playbook, then the badge. 🏆</div>
+  </div>
+</div>
+
+<footer>Built with ☕ and obsession by <b>Yassin Ghariani — “JavaBoy”</b> · “If you can draw the memory, you can answer the question.”</footer>
+</body>
+</html>

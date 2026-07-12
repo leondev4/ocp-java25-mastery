@@ -77,7 +77,7 @@ Every wrong quiz/mock answer gets a row in the tracker:
 
 ## 5. Mock Exam Protocol (Weeks 8–12)
 
-- Always **full length**: 50 questions, 90 minutes, one sitting, no pause, no music.
+- Always **full length**: 50 questions, 120 minutes, one sitting, no pause, no music.
 - Mark questions you *guessed* even if correct — a lucky guess is a hidden weakness.
 - After each mock, spend **as long reviewing as taking it**. Every question (right or wrong) gets a one-line justification: "B, because switch expressions must be exhaustive."
 - **Readiness gate:** 3 consecutive mocks ≥ 80% → book the exam. Below that, another week of Error-Journal grinding.
@@ -115,7 +115,7 @@ A module is ✅ only when ALL are true:
 
 ## 8. Anti-Burnout Rules
 
-- Max 2.5 hours/day. Consistency > heroics. 90 min daily for 12 weeks ≈ 125 hours — more than enough.
+- Max 2.5 hours/day. Consistency > heroics. 120 min daily for 12 weeks ≈ 125 hours — more than enough.
 - One full rest day per week (Anki reviews only, 15 min).
 - Sleep 7–8 h. Memory consolidation happens *during sleep* — an all-nighter literally deletes your studying.
 - If a topic frustrates you: 10-minute walk, then explain the problem out loud to a rubber duck. 🦆
@@ -127,6 +127,9 @@ A module is ✅ only when ALL are true:
 — JavaBoy ☕
 
 ---
+
+## 🏛️ Full mock protocol upgrade
+Use the [Exam Simulator](../interactive/exam-simulator.html) for full-length sittings: it enforces the 120:00 limit, real multi-select rules and no partial credit, then hands you a weakest-topic-first breakdown — feed that straight into the next week's plan. Written mocks 01–02 remain great for paper-tracing practice.
 
 ## 🎮 The daily 10-minute add-ons (new)
 - **Trap Trainer** ([interactive/trap-trainer.html](../interactive/trap-trainer.html)): one full round per day. Miss a question → the RULE goes in the Error Journal, not the question.

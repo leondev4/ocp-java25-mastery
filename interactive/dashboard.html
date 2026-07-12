@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎛️ OCP Command Center — by Yassin Ghariani (JavaBoy)</title>
+<style>
+  :root{--bg:#0b0f17;--panel:#111827;--panel2:#0d1522;--line:#233046;--txt:#e6edf7;--dim:#8b98ad;
+    --blue:#4da3ff;--green:#37c871;--amber:#ffb84d;--pink:#ff6b8f;--purple:#b48cff;
+    --mono:'JetBrains Mono','Fira Code',Consolas,monospace}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;padding:20px 22px 70px}
+  a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+  header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+  h1{font-size:1.3rem}
+  .brand{color:var(--dim);font-size:.83rem}.brand b{color:var(--amber)}
+  .hdr-right{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .btn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:7px 14px;border-radius:9px;cursor:pointer;font-size:.83rem}
+  .btn:hover{border-color:var(--blue)}
+  .btn.primary{background:var(--blue);border-color:var(--blue);color:#04101f;font-weight:700}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .card h3{padding:11px 16px;border-bottom:1px solid var(--line);font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);display:flex;justify-content:space-between;align-items:center}
+  .card h3 .pill{background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:2px 10px;font-size:.72rem;color:var(--amber);text-transform:none;letter-spacing:0}
+  .pad{padding:14px 16px}
+  /* stats row */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .stat .v{font-size:1.45rem;font-weight:800;font-family:var(--mono)}
+  .stat .l{font-size:.72rem;color:var(--dim);letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+  .stat.hot .v{color:var(--amber)} .stat.good .v{color:var(--green)} .stat.info .v{color:var(--blue)} .stat.warn .v{color:var(--pink)}
+  .xpbar{grid-column:1/-1;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+  .xpbar .bar{height:10px;background:var(--panel2);border-radius:6px;overflow:hidden;margin-top:6px}
+  .xpbar .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--purple),var(--amber));transition:.5s}
+  .xpbar .row{display:flex;justify-content:space-between;font-size:.78rem;color:var(--dim)}
+  /* board */
+  .board{width:100%;border-collapse:collapse;font-size:.85rem}
+  .board th{color:var(--dim);font-weight:600;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;padding:8px 6px;text-align:center}
+  .board th:first-child{text-align:left;padding-left:16px}
+  .board td{padding:7px 6px;border-top:1px solid #1a2436;text-align:center}
+  .board td:first-child{text-align:left;padding-left:16px}
+  .board tr:hover td{background:#0f1826}
+  .board a.mod{color:var(--txt)}
+  .board .done-row a.mod{color:var(--green)}
+  .cb{width:19px;height:19px;border-radius:6px;border:1.5px solid #33445f;background:var(--panel2);cursor:pointer;display:inline-grid;place-items:center;font-size:.72rem;color:transparent;transition:.15s;user-select:none}
+  .cb.on{background:var(--green);border-color:var(--green);color:#04101f;font-weight:900}
+  .modprog{font-family:var(--mono);font-size:.72rem;color:var(--dim)}
+  /* review queue */
+  .rev{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #1a2436;font-size:.87rem}
+  .rev:first-of-type{border-top:none}
+  .rev .tag{font-family:var(--mono);font-size:.68rem;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:2px 8px;color:var(--amber)}
+  .rev .tag.overdue{color:var(--pink);border-color:var(--pink)}
+  .rev button{margin-left:auto}
+  .empty{color:var(--dim);font-size:.86rem;padding:8px 0}
+  /* timer */
+  .clock{font-family:var(--mono);font-size:3.2rem;font-weight:800;text-align:center;letter-spacing:.04em;padding:8px 0 2px}
+  .clock.work{color:var(--blue)}.clock.break{color:var(--green)}.clock.exam{color:var(--pink)}
+  .clock.flash{animation:flash 1s steps(2) infinite}
+  @keyframes flash{50%{opacity:.25}}
+  .tmode{text-align:center;color:var(--dim);font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+  .tbtns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding-bottom:6px}
+  .tconf{display:flex;gap:8px;justify-content:center;align-items:center;color:var(--dim);font-size:.78rem;padding-top:8px;border-top:1px solid var(--line);margin-top:8px;flex-wrap:wrap}
+  .tconf input{width:52px;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:7px;padding:4px 6px;font-family:var(--mono);text-align:center}
+  .poms{text-align:center;font-size:.82rem;color:var(--dim);padding-top:6px}
+  .poms b{color:var(--amber)}
+  /* mock log */
+  .mock-add{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+  .mock-add input{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 10px;font-family:var(--mono);width:90px}
+  .mockrow{display:flex;gap:10px;align-items:center;padding:6px 0;border-top:1px solid #1a2436;font-size:.86rem;font-family:var(--mono)}
+  .mockrow .pct.pass{color:var(--green)}.mockrow .pct.fail{color:var(--pink)}
+  .mockrow .del{margin-left:auto;cursor:pointer;color:var(--dim)}
+  .gate{margin-top:10px;padding:9px 12px;border-radius:9px;font-size:.83rem;border:1px solid var(--line);background:var(--panel2)}
+  .gate.open{border-color:var(--green);color:var(--green)}
+  /* links */
+  .links{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .links a{display:block;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:.83rem;color:var(--txt)}
+  .links a:hover{border-color:var(--blue);text-decoration:none}
+  .links a span{display:block;color:var(--dim);font-size:.7rem;margin-top:2px}
+  /* countdown */
+  .cd input{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 10px;font-family:var(--mono)}
+  .cd .big{font-family:var(--mono);font-size:2rem;font-weight:800;color:var(--amber);text-align:center;padding:10px 0 4px}
+  .cd .sub{text-align:center;color:var(--dim);font-size:.8rem}
+  footer{position:fixed;bottom:0;left:0;right:0;background:rgba(11,15,23,.93);border-top:1px solid var(--line);padding:8px 24px;font-size:.76rem;color:var(--dim);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+  footer b{color:var(--amber)}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎛️ OCP Command Center</h1>
+  <div class="brand">your whole preparation, one board · by <b>Yassin Ghariani — JavaBoy ☕</b></div>
+  <div class="hdr-right">
+    <button class="btn" onclick="exportData()">⬇ Backup</button>
+    <button class="btn" onclick="document.getElementById('imp').click()">⬆ Restore</button>
+    <input type="file" id="imp" accept=".json" style="display:none" onchange="importData(event)">
+  </div>
+</header>
+
+<div class="stats">
+  <div class="stat good"><div class="v" id="s-prog">0%</div><div class="l">Repo progress</div></div>
+  <div class="stat hot"><div class="v">🔥 <span id="s-streak">0</span></div><div class="l">Day streak</div></div>
+  <div class="stat info"><div class="v" id="s-due">0</div><div class="l">Reviews due</div></div>
+  <div class="stat warn"><div class="v" id="s-mock">—</div><div class="l">Last mock</div></div>
+  <div class="stat"><div class="v">⏳ <span id="s-days">—</span></div><div class="l">Days to exam</div></div>
+  <div class="xpbar">
+    <div class="row"><span>Level <b id="lvl">1</b> — <span id="ltitle">Hello World</span></span><span id="xptxt">0 XP</span></div>
+    <div class="bar"><i id="xpfill" style="width:0%"></i></div>
+  </div>
+</div>
+
+<div class="grid">
+  <!-- BOARD -->
+  <div class="card" style="grid-column:span 2;min-width:0">
+    <h3>📋 Module board — tick as you go (each tick = XP) <span class="pill" id="boardpill"></span></h3>
+    <div style="overflow-x:auto">
+    <table class="board">
+      <thead><tr><th>Module</th><th>📖 Notes</th><th>⌨️ Lab</th><th>🧪 Quiz ≥90%</th><th>⚡ Anki</th><th>Done</th></tr></thead>
+      <tbody id="btable"></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- CHRONO -->
+  <div class="card">
+    <h3>⏱️ Chrono <span class="pill" id="tpill">pomodoro</span></h3>
+    <div class="pad">
+      <div class="tmode" id="tmode">FOCUS — pick a module, silence the phone</div>
+      <div class="clock work" id="clock">25:00</div>
+      <div class="tbtns">
+        <button class="btn primary" id="tstart" onclick="tToggle()">▶ Start</button>
+        <button class="btn" onclick="tReset()">↺ Reset</button>
+        <button class="btn" onclick="tSwitch()" id="tswitch">🎯 Exam mode (120:00)</button>
+      </div>
+      <div class="poms">Pomodoros today: <b id="pomcount">0</b> · every 🍅 = +10 XP</div>
+      <div class="tconf">
+        <label>Focus <input type="number" id="cw" min="5" max="90" value="25" onchange="tConf()"> min</label>
+        <label>Break <input type="number" id="cb2" min="1" max="30" value="5" onchange="tConf()"> min</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEWS -->
+  <div class="card">
+    <h3>🔁 Spaced-repetition queue <span class="pill">D1·3·7·14·30 auto</span></h3>
+    <div class="pad" id="revlist"></div>
+  </div>
+
+  <!-- MOCK LOG -->
+  <div class="card">
+    <h3>📝 Mock log <span class="pill">gate: 3× ≥ 80%</span></h3>
+    <div class="pad">
+      <div class="mock-add">
+        <input type="number" id="mscore" placeholder="score" min="0" max="50">/ 50
+        <button class="btn primary" onclick="addMock()">+ Log mock</button>
+      </div>
+      <div id="mocklist"></div>
+      <div class="gate" id="gate"></div>
+    </div>
+  </div>
+
+  <!-- EXAM COUNTDOWN -->
+  <div class="card">
+    <h3>🎯 Exam day</h3>
+    <div class="pad cd">
+      <label style="font-size:.8rem;color:var(--dim)">Exam date: <input type="date" id="examdate" onchange="setExam()"></label>
+      <div class="big" id="cdbig">—</div>
+      <div class="sub" id="cdsub">set your exam date (book only after the mock gate opens)</div>
+    </div>
+  </div>
+
+  <!-- LINKS -->
+  <div class="card">
+    <h3>🧭 Arsenal — everything one click away</h3>
+    <div class="pad links">
+      <a href="../modules/00-start-here-zero-to-java/NOTES.md">🐣 Module 00<span>zero to Java</span></a>
+      <a href="../docs/THE-WALL-CHEATSHEET.md">🧱 The Wall<span>whole exam, one page</span></a>
+      <a href="memory-visualizer.html">🎬 Memory Visualizer<span>stack · heap · pool · GC</span></a>
+      <a href="java-internals-visualizer.html">🎬 Internals Visualizer<span>dispatch · streams · exceptions</span></a>
+      <a href="exam-simulator.html">🏛️ Exam Simulator<span>50 q · 120:00 · real rules</span></a>
+      <a href="trap-trainer.html">🎮 Trap Trainer<span>daily quiz game</span></a>
+      <a href="../docs/JAVA-MEMORY-EXPLAINED.md">🧠 Memory guide<span>with diagrams</span></a>
+      <a href="../mock-exams/mock-exam-01.md">📝 Mock 01<span>25 q / 60 min</span></a>
+      <a href="../mock-exams/mock-exam-02.md">📝 Mock 02<span>Java 22–25 heavy</span></a>
+      <a href="../docs/STUDY_STRATEGY.md">🧠 Strategy<span>the never-forget system</span></a>
+      <a href="../docs/EXAM-DAY-PLAYBOOK.md">🏁 Playbook<span>exam-day tactics</span></a>
+    </div>
+  </div>
+</div>
+
+<footer><span>💾 Progress auto-saves in this browser (localStorage) — use <b>Backup</b> before switching machines.</span><span>Built with ❤ by <b>Yassin Ghariani — JavaBoy ☕</b></span></footer>
+
+<script>
+/* ================= state ================= */
+const MODS=[
+ ['00','🐣 Zero to Java'],['01','Basics & Data Types'],['02','Flow Control & Switch'],['03','OOP Core'],
+ ['04','Records · Enums · Sealed'],['05','Exceptions'],['06','Collections & Generics'],['07','Streams & Gatherers'],
+ ['08','Concurrency & Virtual Threads'],['09','I/O & NIO.2'],['10','Modules & Localization'],['11','Java 25 New Features'],['12','Date-Time API']];
+const TASKS=['notes','lab','quiz','anki'];
+const REVDAYS=[1,3,7,14,30];
+const KEY='ocp25-command-center';
+const LVLS=[[0,'Hello World'],[100,'Compiles!'],[250,'Green Tests'],[450,'Stack Walker'],[700,'Heap Whisperer'],[1000,'Stream Bender'],[1400,'Thread Tamer'],[1900,'Trap Slayer'],[2500,'Mock Crusher'],[3200,'Certified Mindset 🏆']];
+let S=load();
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s)return s}catch(e){}
+  return {tasks:{},doneDate:{},reviews:{},xp:0,poms:0,pomDate:today(),mocks:[],exam:'',streak:0,lastActive:''}}
+function save(){localStorage.setItem(KEY,JSON.stringify(S))}
+function today(){return new Date().toISOString().slice(0,10)}
+function addDays(d,n){const x=new Date(d+'T00:00:00');x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)}
+function touchStreak(){const t=today();
+  if(S.lastActive===t)return;
+  S.streak=(S.lastActive===addDays(t,-1))?S.streak+1:1;
+  S.lastActive=t;save()}
+function gainXP(n){S.xp+=n;touchStreak();save();renderStats()}
+
+/* ================= board ================= */
+function tKey(m,t){return m+':'+t}
+function renderBoard(){
+  const tb=document.getElementById('btable');
+  tb.innerHTML=MODS.map(([id,name])=>{
+    const done=TASKS.filter(t=>S.tasks[tKey(id,t)]).length;
+    const all=done===4;
+    return `<tr class="${all?'done-row':''}">
+      <td><a class="mod" href="../modules/${id==='00'?'00-start-here-zero-to-java':id+'-'+slug(id)}/NOTES.md">${all?'✅ ':''}${id} · ${name}</a></td>
+      ${TASKS.map(t=>`<td><span class="cb ${S.tasks[tKey(id,t)]?'on':''}" onclick="toggle('${id}','${t}')">✓</span></td>`).join('')}
+      <td class="modprog">${done}/4</td></tr>`}).join('');
+  const total=MODS.length*4, ticked=Object.values(S.tasks).filter(Boolean).length;
+  document.getElementById('boardpill').textContent=`${ticked}/${total} tasks`;
+}
+function slug(id){return {['01']:'basics-and-data-types',['02']:'flow-control',['03']:'oop-core',['04']:'records-enums-sealed',['05']:'exceptions',['06']:'arrays-collections-generics',['07']:'lambdas-streams-gatherers',['08']:'concurrency-virtual-threads',['09']:'io-nio',['10']:'modules-and-localization',['11']:'java25-new-features',['12']:'date-time-api'}[id]}
+function toggle(id,t){
+  const k=tKey(id,t),was=!!S.tasks[k];
+  S.tasks[k]=!was;
+  gainXP(was?-15:15);
+  const complete=TASKS.every(x=>S.tasks[tKey(id,x)]);
+  if(complete&&!S.doneDate[id]){
+    S.doneDate[id]=today();
+    S.reviews[id]=REVDAYS.map(d=>({due:addDays(today(),d),day:d,done:false}));
+    gainXP(40);
+  }
+  if(!complete&&S.doneDate[id]&&!was===false){/* unticking keeps history */}
+  save();renderBoard();renderReviews();renderStats();
+}
+
+/* ================= reviews ================= */
+function renderReviews(){
+  const el=document.getElementById('revlist');const t=today();let rows='';let due=0;
+  MODS.forEach(([id,name])=>{
+    (S.reviews[id]||[]).forEach((r,i)=>{
+      if(r.done||r.due>t)return;
+      due++;
+      const overdue=r.due<t;
+      rows+=`<div class="rev"><span class="tag ${overdue?'overdue':''}">D${r.day}${overdue?' ⚠':''}</span>
+        <span>${id} · ${name}</span>
+        <button class="btn" onclick="doneReview('${id}',${i})">Reviewed ✓ (+8)</button></div>`;
+    });
+  });
+  el.innerHTML=rows||'<div class="empty">Nothing due — the algorithm is happy. Come back tomorrow (or finish a module to schedule its reviews).</div>';
+  document.getElementById('s-due').textContent=due;
+}
+function doneReview(id,i){S.reviews[id][i].done=true;gainXP(8);save();renderReviews();renderStats()}
+
+/* ================= stats/xp ================= */
+function renderStats(){
+  const total=MODS.length*4, ticked=Object.values(S.tasks).filter(Boolean).length;
+  document.getElementById('s-prog').textContent=Math.round(ticked/total*100)+'%';
+  document.getElementById('s-streak').textContent=S.streak;
+  const lm=S.mocks[S.mocks.length-1];
+  document.getElementById('s-mock').textContent=lm?Math.round(lm.score/50*100)+'%':'—';
+  // level
+  let li=0;for(let i=0;i<LVLS.length;i++)if(S.xp>=LVLS[i][0])li=i;
+  const cur=LVLS[li][0],next=LVLS[Math.min(li+1,LVLS.length-1)][0];
+  document.getElementById('lvl').textContent=li+1;
+  document.getElementById('ltitle').textContent=LVLS[li][1];
+  document.getElementById('xptxt').textContent=S.xp+' XP'+(li<LVLS.length-1?` · ${next-S.xp} to next`:' · MAX');
+  document.getElementById('xpfill').style.width=(li>=LVLS.length-1?100:((S.xp-cur)/(next-cur)*100))+'%';
+  renderCountdown();
+}
+
+/* ================= chrono ================= */
+let T={mode:'work',left:25*60,run:false,iv:null,exam:false};
+function fmt(s){const m=Math.floor(s/60),ss=s%60;return String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0')}
+function tPaint(){
+  const c=document.getElementById('clock');
+  c.textContent=fmt(T.left);
+  c.className='clock '+(T.exam?'exam':T.mode)+(T.left===0?' flash':'');
+  document.getElementById('tmode').textContent=T.exam?'EXAM SIMULATION — 50 questions, no pauses':(T.mode==='work'?'FOCUS — pick a module, silence the phone':'BREAK — stand up, water, no scrolling');
+  document.getElementById('tpill').textContent=T.exam?'exam':'pomodoro';
+  if(S.pomDate!==today()){S.poms=0;S.pomDate=today();save()}
+  document.getElementById('pomcount').textContent=S.poms;
+}
+function tToggle(){
+  if(T.run){clearInterval(T.iv);T.run=false;document.getElementById('tstart').textContent='▶ Start';return}
+  T.run=true;document.getElementById('tstart').textContent='⏸ Pause';
+  T.iv=setInterval(()=>{
+    if(T.left>0){T.left--;tPaint();return}
+    clearInterval(T.iv);T.run=false;document.getElementById('tstart').textContent='▶ Start';
+    beep();
+    if(!T.exam){
+      if(T.mode==='work'){S.poms++;S.pomDate=today();gainXP(10);T.mode='break';T.left=(+document.getElementById('cb2').value||5)*60}
+      else{T.mode='work';T.left=(+document.getElementById('cw').value||25)*60}
+      save();
+    }
+    tPaint();
+  },1000);
+}
+function tReset(){clearInterval(T.iv);T.run=false;document.getElementById('tstart').textContent='▶ Start';
+  T.left=T.exam?120*60:(T.mode==='work'?(+document.getElementById('cw').value||25):(+document.getElementById('cb2').value||5))*60;tPaint()}
+function tSwitch(){T.exam=!T.exam;T.mode='work';clearInterval(T.iv);T.run=false;
+  document.getElementById('tstart').textContent='▶ Start';
+  document.getElementById('tswitch').textContent=T.exam?'🍅 Pomodoro mode':'🎯 Exam mode (120:00)';
+  T.left=T.exam?120*60:(+document.getElementById('cw').value||25)*60;tPaint()}
+function tConf(){if(!T.run&&!T.exam)T.left=(T.mode==='work'?(+document.getElementById('cw').value||25):(+document.getElementById('cb2').value||5))*60;tPaint()}
+function beep(){try{const a=new (window.AudioContext||window.webkitAudioContext)();const o=a.createOscillator(),g=a.createGain();
+  o.connect(g);g.connect(a.destination);o.frequency.value=880;g.gain.value=.08;o.start();
+  setTimeout(()=>{o.frequency.value=1174},180);setTimeout(()=>{o.stop();a.close()},420)}catch(e){}}
+
+/* ================= mocks ================= */
+function addMock(){
+  const v=+document.getElementById('mscore').value;
+  if(!(v>=0&&v<=50))return;
+  S.mocks.push({d:today(),score:v});gainXP(25);save();
+  document.getElementById('mscore').value='';renderMocks();renderStats();
+}
+function delMock(i){S.mocks.splice(i,1);save();renderMocks();renderStats()}
+function renderMocks(){
+  const el=document.getElementById('mocklist');
+  el.innerHTML=S.mocks.map((m,i)=>{const p=Math.round(m.score/50*100);
+    return `<div class="mockrow"><span>${m.d}</span><span>${m.score}/50</span><span class="pct ${p>=80?'pass':'fail'}">${p}%</span><span class="del" onclick="delMock(${i})">✕</span></div>`}).join('')||'<div class="empty">No mocks yet. First full mock: end of week 6.</div>';
+  const last3=S.mocks.slice(-3);
+  const open=last3.length===3&&last3.every(m=>m.score/50>=0.8);
+  const g=document.getElementById('gate');
+  g.className='gate'+(open?' open':'');
+  g.textContent=open?'🟢 GATE OPEN — 3 consecutive mocks ≥ 80%. Book the exam. You are ready.'
+    :`🔒 Booking gate: need 3 consecutive mocks ≥ 80% (40/50). Current run: ${last3.filter(m=>m.score/50>=.8).length}/3.`;
+}
+
+/* ================= exam countdown ================= */
+function setExam(){S.exam=document.getElementById('examdate').value;save();renderCountdown()}
+function renderCountdown(){
+  const el=document.getElementById('cdbig'),sub=document.getElementById('cdsub');
+  if(!S.exam){el.textContent='—';document.getElementById('s-days').textContent='—';return}
+  document.getElementById('examdate').value=S.exam;
+  const days=Math.ceil((new Date(S.exam+'T09:00:00')-new Date())/86400000);
+  document.getElementById('s-days').textContent=days;
+  if(days>1){el.textContent=days+' days';sub.textContent='taper starts at D-2: no new material, only The Wall + Error Journal'}
+  else if(days===1){el.textContent='TOMORROW';sub.textContent='playbook, sleep, water. You built this for months — trust it.'}
+  else if(days===0){el.textContent='TODAY 🏆';sub.textContent='3-pass method. Compile errors first. Breathe.'}
+  else{el.textContent='done ✔';sub.textContent='hope it went well — log the result & rest!'}
+}
+
+/* ================= backup ================= */
+function exportData(){
+  const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);
+  a.download='ocp-progress-'+today()+'.json';a.click();
+}
+function importData(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{S=JSON.parse(r.result);save();renderAll()}catch(e){alert('Invalid backup file')}};
+  r.readAsText(f);
+}
+
+/* ================= init ================= */
+function renderAll(){renderBoard();renderReviews();renderMocks();renderStats();tPaint()}
+touchStreak();renderAll();
+</script>
+</body>
+</html>

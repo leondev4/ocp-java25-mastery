@@ -5,7 +5,7 @@
 
 **by Yassin Ghariani — “JavaBoy”**
 
-`Exam 1Z0-831` · `Java SE 25 Developer Professional` · `50 questions` · `90 min` · `68% to pass`
+`Exam 1Z0-831` · `Java SE 25 Developer Professional` · `50 questions` · `120 min` · `68% to pass`
 
 *From "I've never written code" → visual memory models → animated internals → certified.*
 
@@ -32,7 +32,9 @@
 |---|---|
 | [`interactive/memory-visualizer.html`](interactive/memory-visualizer.html) | 🥞 **Stack & heap step-through** (frames push/pop, live reference arrows, garbage forming, pass-by-value proving itself) · 🔤 **String Pool** animation · 🗑️ **GC playground** (allocate → drop refs → run Minor GCs → watch aging & promotion) |
 | [`interactive/java-internals-visualizer.html`](interactive/java-internals-visualizer.html) | 🎭 **Polymorphism dispatch** (methods vs fields vs statics — watch which wins and WHY) · 🌊 **Stream pipeline** (laziness, one-element-at-a-time flow, limit() short-circuiting the source) · 💥 **Exception propagation** (watch it climb the stack through finally into a matching catch) |
-| [`interactive/trap-trainer.html`](interactive/trap-trainer.html) | 🎮 **The Trap Trainer** — a rapid-fire quiz GAME: 35+ real exam traps, instant explanations, score & streak, topic filter. Play a round every day. |
+| [`interactive/exam-simulator.html`](interactive/exam-simulator.html) | 🏛️ **THE EXAM SIMULATOR** — a full dress rehearsal of 1Z0-831: 50 questions drawn from a 58-question bank (fresh mix each attempt), hard **120:00 countdown** that auto-submits, Pearson-style **navigator grid**, 🚩 mark-for-review, **multi-select enforcement** ("choose 2/3" with counter), no partial credit (like the real thing), then pass/fail vs 68%, **per-topic breakdown bars** sorted weakest-first, full explained review mode, and attempt history. |
+| [`interactive/dashboard.html`](interactive/dashboard.html) | 🎛️ **THE COMMAND CENTER** — your whole preparation on ONE board: tick-off module board (13 modules × 4 tasks), auto-scheduled spaced-repetition queue (D1/3/7/14/30), ⏱️ built-in chrono (Pomodoro + full 120-min exam simulator with alarm), mock-score log with the 3×80% booking gate, exam-day countdown, XP/levels/streak, one-click links to everything. Progress auto-saves in your browser; backup/restore as JSON. **Open this file first every day.** |
+| [`interactive/trap-trainer.html`](interactive/trap-trainer.html) | 🎮 **The Trap Trainer** — a rapid-fire quiz GAME: 50+ real exam traps (now covering Date-Time & DST, serialization, locking, parallel streams, and the reversed "which snippet produces this output" format), instant explanations, score & streak, topic filter. Play a round every day. |
 
 Static diagrams (embed anywhere): [`assets/diagrams/`](assets/diagrams/) — JVM architecture, stack-vs-heap, string pool, GC generations. Plus **Mermaid diagrams inside the notes** (render automatically on GitHub) and a full illustrated guide: **[docs/JAVA-MEMORY-EXPLAINED.md](docs/JAVA-MEMORY-EXPLAINED.md)**.
 
@@ -49,7 +51,10 @@ ocp-java25-mastery/
 │   ├── JAVA-MEMORY-EXPLAINED.md   🧠 stack/heap/pool/GC with diagrams
 │   ├── THE-WALL-CHEATSHEET.md     🧱 the whole exam on one printable wall
 │   └── EXAM-DAY-PLAYBOOK.md       🏁 timing & tactics for the real thing
+├── index.html                     🌐 landing page (enable GitHub Pages → live site)
 ├── interactive/
+│   ├── exam-simulator.html        🏛️ FULL 50-question / 120-min mock exam app
+│   ├── dashboard.html             🎛️ COMMAND CENTER: board + chrono + tracker
 │   ├── memory-visualizer.html     🎬 ANIMATED stack, heap, string pool & GC
 │   ├── java-internals-visualizer.html 🎬 polymorphism · streams · exceptions
 │   └── trap-trainer.html          🎮 quiz game: 35+ traps, score & streaks
@@ -66,7 +71,8 @@ ocp-java25-mastery/
 │   ├── 08-concurrency-virtual-threads
 │   ├── 09-io-nio
 │   ├── 10-modules-and-localization
-│   └── 11-java25-new-features     ← everything new since Java 21 (exam delta!)
+│   ├── 11-java25-new-features     ← everything new since Java 21 (exam delta!)
+│   └── 12-date-time-api           🕐 java.time incl. DST traps (official objective)
 │         each module = NOTES.md (⚠️ traps + 🧠 memory/flow diagrams)
 │                       + src/ runnable Java 25 labs + QUIZ.md
 ├── flashcards/ocp25-anki-deck.txt ⚡ ~120 Anki cards, ready to import
@@ -108,6 +114,7 @@ java modules/00-start-here-zero-to-java/src/FirstSteps.java
 | Concurrency, **virtual threads**, **scoped values** | 08 |
 | I/O, **java.lang.IO**, NIO.2, serialization | 09 |
 | JPMS, **module import declarations**, localization | 10 |
+| Date, time, duration, period, instant, zones & **DST** | 12 |
 | Java 22→25 delta sweep (compact source files & friends) | 11 |
 
 ---

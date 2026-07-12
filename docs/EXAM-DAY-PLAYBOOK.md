@@ -9,7 +9,7 @@
 
 ## The 90 Minutes — Time Strategy
 
-50 questions / 90 min = **1:48 per question**. Use the 3-pass method:
+50 questions / 120 min = **2:24 per question on average — but real questions are LONG**. Use the 3-pass method:
 
 **Pass 1 (≈ 55 min):** Answer everything you're sure about in < 90 s. Anything longer → pick your best guess, **mark for review**, move on. Never leave blank (no negative marking).
 
@@ -37,3 +37,12 @@ Before evaluating logic, hunt for **compile errors first** — Oracle's favorite
 - You prepared with a 80%+ mock average for a 68% bar. The math is on your side.
 
 **Go get it. — Yassin Ghariani, JavaBoy ☕🔥**
+
+---
+
+## 🔎 Field intel — what recent OCP takers report about this exam generation
+
+- **Questions are long.** Most span multiple scrolling pages; some options contain 20–30 lines of code each, with 6–10 options per question. Budget reading time, not just thinking time.
+- **The reversed format is common:** instead of "what does this print?", you get "**which of these snippets produces this output?**" — 5+ code fragments to eliminate. Attack these by scanning each option for a fast kill (compile error, wrong modifier, missing default in a switch expression, non-sealed violation) before deep-reading any of them.
+- **Single questions mix multiple topics** (e.g., a record inside a sealed hierarchy switched over inside a virtual-thread task). Your cross-module drilling (Trap Trainer + mocks) is specifically built for this.
+- **Time is the real enemy** — experienced takers report finishing with minutes to spare. The 3-pass method above is not optional. Train stamina with full-length 120-minute sittings before booking.

@@ -1,4 +1,4 @@
-# Mock Exam 02 — 25 Questions / 45 Minutes
+# Mock Exam 02 — 25 Questions / 60 Minutes
 
 > Harder mix, heavier on Java 22–25 deltas. Timer on. Closed book. Mark guesses with ⭐.
 
