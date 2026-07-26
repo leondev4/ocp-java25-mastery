@@ -102,3 +102,124 @@ flowchart LR
     L["final list ➜ 🔒 arrow frozen"] --> O["ArrayList [1, 2, 3…] 🔓 contents mutable"]
     style O fill:#14432e,stroke:#37c871,color:#fff
 ```
+
+---
+
+## 🧭 The mental model — two different questions, asked at two different times
+
+Nearly every OOP trap on this exam reduces to one distinction:
+
+- **Fields and static methods are resolved by the compiler**, using the *reference* type. Decided before the program runs.
+- **Instance methods are resolved by the JVM**, using the *object* type. Decided at the moment of the call.
+
+That is the whole of it. Fields are **hidden**, not overridden. Static methods are **hidden**, not overridden. Only instance methods are genuinely polymorphic.
+
+```java
+class P { String n = "P"; String get() { return "P"; } }
+class C extends P { String n = "C"; String get() { return "C"; } }
+
+P o = new C();
+o.n      // "P"  — compiler looked at the reference type P
+o.get()  // "C"  — JVM looked at the object, which is a C
+```
+
+One object, two different answers, in the same expression. If you can explain *why* without hesitating, you have most of this module.
+
+The second organising idea is **construction order**, because it explains a whole family of surprises: a parent constructor runs *before* the child's fields are initialised, so an overridden method called from a parent constructor sees `null`.
+
+> **Compiler sees the reference. JVM sees the object. Parents are built before children.**
+
+## 🔬 Worked trace — the full initialisation order
+
+```java
+class A {
+    static { System.out.print("A-static "); }
+    { System.out.print("A-init "); }
+    A() { System.out.print("A-ctor "); }
+}
+class B extends A {
+    static { System.out.print("B-static "); }
+    { System.out.print("B-init "); }
+    B() { System.out.print("B-ctor "); }
+}
+// new B();  new B();
+```
+
+Output: `A-static B-static A-init A-ctor B-init B-ctor A-init A-ctor B-init B-ctor`
+
+The order, and the reason for each:
+
+| Phase | Runs | When |
+|---|---|---|
+| 1 | Parent statics, then child statics | **Once**, at class load. Parent first because loading `B` requires `A` |
+| 2 | Implicit `super()` → parent instance initialisers → parent constructor body | Every `new` |
+| 3 | Child instance initialisers → child constructor body | Every `new` |
+
+Note the pairing: instance initialiser blocks always run **immediately before the constructor body of the same class**, and after that class's `super()` call has returned.
+
+## 🔬 Worked trace — the constructor that reads `null`
+
+```java
+class Base {
+    Base() { show(); }                       // ② calls the OVERRIDE
+    void show() { System.out.println("base"); }
+}
+class Derived extends Base {
+    private String label = "ready";          // ③ runs AFTER Base() returns
+    @Override void show() { System.out.println(label); }
+}
+// new Derived();  →  prints  null
+```
+
+1. `new Derived()` calls `Derived()`, which begins with an implicit `super()`.
+2. `Base()` runs and calls `show()`. Dispatch is polymorphic, so **`Derived.show()` executes** — against an object whose fields have not been initialised yet.
+3. `label` is still `null`. It is assigned only after `Base()` returns.
+
+This is why "never call an overridable method from a constructor" is a rule and not a preference. Make such methods `private`, `static`, or `final`.
+
+## 🔬 Worked trace — overload resolution, in order
+
+```java
+void f(long x)      { print("long");    }
+void f(Integer x)   { print("Integer"); }
+void f(Object x)    { print("Object");  }
+void f(int... x)    { print("varargs"); }
+
+f(5);   // → "long"
+```
+
+The compiler makes **three passes**, and only moves on when no candidate matches:
+
+1. **Exact match / widening primitive.** `int → long` works → **`long` wins.** Search stops.
+2. Boxing (`int → Integer`, then widening reference to `Object`) — never reached.
+3. Varargs — always last resort.
+
+Delete `f(long)` and it prints `Integer`. Delete that too and you get `Object`. Delete that and finally `varargs`. **Varargs never wins while any other candidate exists.**
+
+## 🎭 Why the wrong answer looks right
+
+| Tempting belief | Why it's tempting | The truth |
+|---|---|---|
+| "Fields are polymorphic like methods" | They're both members | Fields are **hidden**, resolved by the reference type at compile time |
+| "You can override a static method" | It compiles and looks overridden | It's **hiding**. `P.s()` always calls `P`'s version |
+| "An override can throw broader checked exceptions" | It's a subclass, it does more | Checked exceptions may only **narrow or vanish**. Unchecked are unrestricted |
+| "An override can reduce visibility" | Tightening sounds safe | Visibility may only **widen**. `public` → `protected` won't compile |
+| "Changing the parameter type overrides" | Same name, same idea | Different parameters = **overload**, not override. `@Override` catches this |
+| "Abstract classes can't have constructors" | You can't instantiate them | They can, and must — subclasses call `super()` |
+| "Two interfaces with the same default is fine" | Java picks one | **Compile error.** You must override and may delegate with `A.super.hi()` |
+| "Nothing may precede `super()`" | True for twenty years | **Java 25 (JEP 513)** allows a prologue: validate arguments, assign your own fields. Just no `this` |
+| "`final` on a field freezes the object" | The word says final | It freezes the **reference**. `final List` can still be added to |
+| "A subclass constructor works without a matching parent constructor" | It compiles in simple cases | Only if the parent has an accessible no-arg constructor — the implicit `super()` needs a target |
+
+## 🔁 Recall ladder
+
+1. In `P o = new C();`, why do `o.n` and `o.get()` disagree?
+2. Write the ten-token output order for a two-level hierarchy with statics, instance blocks and constructors, instantiated twice.
+3. Why does an overridden method called from a parent constructor see `null`?
+4. Name the three passes of overload resolution, in order.
+5. Four things an override may not do.
+6. Two interfaces, same default method, one class — what does the compiler demand, and what's the delegation syntax?
+7. What exactly may appear before `super()` in Java 25, and what may not?
+8. Static nested versus inner class: which needs an enclosing instance, and how do you instantiate each?
+9. Where is a package-private member visible? Where does `protected` reach that it doesn't?
+10. `final` on a class, a method, a field, a parameter — one sentence each.

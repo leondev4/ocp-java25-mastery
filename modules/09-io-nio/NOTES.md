@@ -53,3 +53,102 @@ flowchart TB
 ```
 
 And the stream/eager split: `Files.readAllLines` → whole `List` in memory (heap!) vs `Files.lines` → lazy Stream over the file — must be closed (try-with-resources) or the file handle leaks.
+
+---
+
+## 🧭 The mental model — two APIs, and a stack of decorators
+
+The `java.nio.file` package looks large until you notice it is really **two APIs with a hard line between them**:
+
+- **`Path` never touches the disk.** It is string manipulation with separators. `resolve`, `relativize`, `normalize`, `getParent`, `getFileName` — all of them work perfectly on paths to files that do not exist and never will. `Path.of("/nope/nope.txt")` succeeds every time.
+- **`Files` touches the disk.** Every method can throw `IOException` because every method is a real syscall. `exists`, `readAllLines`, `copy`, `delete`, `walk`.
+
+Ask "does this method need the disk to answer?" and you always know which class it lives on. `normalize()` cleans up `..` textually; `toRealPath()` resolves it against the actual filesystem *and* throws if the file is missing. Same intent, opposite sides of the line.
+
+The old `java.io` package is organised differently — as **decorators**. There are two base pipes and everything else wraps them:
+
+```
+InputStream / OutputStream   ← bytes
+Reader      / Writer         ← characters (encoding-aware)
+```
+
+`FileReader` is a `Reader` over a file. `BufferedReader` wraps any `Reader` to add block buffering and `readLine()`. `InputStreamReader` is the **bridge** — it wraps a byte stream and applies a charset to produce characters. Once you see it as wrapping rather than inheritance-for-its-own-sake, the class list stops needing memorisation.
+
+> **`Path` = strings. `Files` = syscalls. `java.io` = pipes you wrap.**
+
+## 🔬 Worked trace — path algebra
+
+The three operations the exam always mixes up:
+
+```java
+Path base = Path.of("/home/gojo/lab");
+
+base.resolve("repo")           // /home/gojo/lab/repo      relative arg → append
+base.resolve("/etc/hosts")     // /etc/hosts               ABSOLUTE arg → base is discarded
+base.resolve("")               // /home/gojo/lab           empty → unchanged
+
+Path.of("a/b").relativize(Path.of("a/c"))    // ../c    route FROM the first TO the second
+Path.of("a").relativize(Path.of("a/b/c"))    // b/c
+Path.of("/a").relativize(Path.of("b"))       // throws  — can't mix absolute and relative
+
+Path.of("a/./b/../c").normalize()            // a/c     purely textual cleanup
+```
+
+The one that catches everyone: **`resolve` with an absolute argument throws the base away.** It is not concatenation; it is "interpret this second path relative to the first, unless the second doesn't need a reference point."
+
+## 🔬 Worked trace — deserialization skips your constructor
+
+```java
+class Account implements Serializable {
+    private transient String pin;
+    private static String bank = "TN";
+    private int balance;
+
+    Account(int balance) {
+        System.out.println("constructor ran");   // never prints on deserialize
+        if (balance < 0) throw new IllegalArgumentException();
+        this.balance = balance;
+    }
+}
+```
+
+Round-trip an `Account` and:
+
+| Field | After deserialization | Why |
+|---|---|---|
+| `pin` | `null` | `transient` — excluded from the stream, comes back as the type default |
+| `bank` | whatever the class currently holds | `static` belongs to the **class**, not the instance. Never serialized |
+| `balance` | restored from the stream | ordinary instance field |
+
+And the constructor **does not run**. Java reconstructs the object field-by-field from the stream instead. The nearest **non-serializable** superclass's no-arg constructor does run — that's the only constructor involved.
+
+The consequence the exam is really testing: **any invariant you enforce in a constructor can be bypassed by deserialization.** A crafted stream can hand you an `Account` with a negative balance. Validate in `readObject` if it matters.
+
+## 🎭 Why the wrong answer looks right
+
+| Tempting belief | Why it's tempting | The truth |
+|---|---|---|
+| "`resolve` joins two paths" | It does, most of the time | An **absolute** argument discards the base entirely |
+| "`normalize()` resolves `..` properly" | It removes them | Textually only. It never consults the disk — that's `toRealPath()` |
+| "`Path.of` fails on a missing file" | Constructing a path to nothing feels wrong | It always succeeds. Paths are strings until `Files` gets involved |
+| "`Files.delete` returns false if absent" | Lots of APIs do | It **throws** `NoSuchFileException`. `deleteIfExists` returns the boolean |
+| "`Files.copy` overwrites" | That's what `cp` does | `FileAlreadyExistsException` unless you pass `REPLACE_EXISTING` |
+| "`Files.lines` is just a lazy `readAllLines`" | Same data | It holds an **open file handle**. Outside try-with-resources you leak descriptors |
+| "`transient` fields keep their value" | They're still fields | Excluded from the stream → type default on the way back |
+| "`static` fields are serialized" | They're part of the class | Class state, not instance state. Never written |
+| "The constructor runs on deserialize" | Objects come from constructors | It does not. That's the whole security concern |
+| "`PrintWriter` throws on failure" | Everything in `java.io` throws | It swallows `IOException` and sets a flag you check with `checkError()` |
+| "`System.console()` is always available" | Every program has a console | `null` when piped or run in many IDEs. Part of why `java.lang.IO` exists |
+
+## 🔁 Recall ladder
+
+1. State the dividing line between `Path` and `Files` in one sentence.
+2. `Path.of("/a/b").resolve("/c")` — answer, and the rule behind it.
+3. `Path.of("a/b").relativize(Path.of("a/c"))` — answer. When does `relativize` throw?
+4. Difference between `normalize()` and `toRealPath()`.
+5. Which of `Files.delete`, `deleteIfExists`, `copy`, `move` throw on a pre-existing or missing target, and how do you opt out?
+6. Which `Files` methods must live inside try-with-resources, and why?
+7. What happens to `transient`, `static`, and ordinary fields across a round trip?
+8. Which constructor, if any, runs during deserialization?
+9. Name the two base pipe hierarchies and the class that bridges them.
+10. What does `serialVersionUID` protect against, and what's thrown when it mismatches?

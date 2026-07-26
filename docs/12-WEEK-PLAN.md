@@ -1,7 +1,5 @@
 # 🗓️ The 12-Week Battle Plan → 1Z0-831
 
-> 🎛️ **Run every day from the [Command Center](../interactive/dashboard.html)** — board, chrono, review queue and mock gate live there. Slot **Module 12 (Date-Time API)** right after Module 06 or into any review week; it's short but its DST traps are guaranteed exam material.
->
 > 🐣 **Never coded Java before?** Do [Module 00 — Zero to Java](../modules/00-start-here-zero-to-java/NOTES.md) + the [animated memory visualizer](../interactive/memory-visualizer.html) during Week 0, then run this plan at ×1.5 pace (18 weeks). The plan below assumes basic programming literacy.
 
 > ~90–120 min/day, 6 days/week, 1 rest day (Anki only). Adjust speed if you're already experienced — but never skip the review days.
@@ -73,7 +71,7 @@
 - **D2:** **virtual threads** (creation, pinning fix in Java 24), platform vs virtual
 - **D3:** synchronization, locks, atomic classes, concurrent collections
 - **D4:** **Scoped Values (Java 25 final!)** vs ThreadLocal
-- **D5:** 🔁 Module 07 + quiz · 🧪 **Mock Exam #1 (full 50Q/90min)** this weekend
+- **D5:** 🔁 Module 07 + quiz · 🧪 **Mock Exam #1 (full 50Q/120min)** this weekend
 - **D6:** mock review (every question justified) + 📓
 
 ### Week 9 — Modules 09 + 10

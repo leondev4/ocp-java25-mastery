@@ -87,3 +87,97 @@ flowchart TB
 Every data race in existence is this picture: two stacks, one heap object, no coordination. `synchronized`/locks serialize access; `volatile` fixes *visibility*; `AtomicInteger` makes read-modify-write one indivisible step; **ScopedValue/ThreadLocal** work by giving each thread its own slot instead of sharing.
 
 **Virtual threads:** thousands of cheap stacks stored ON THE HEAP, mounted onto a few carrier (platform) threads. Blocking? The JVM unmounts the virtual thread and reuses the carrier — that's why they're perfect for I/O-bound work, and (since JEP 491 / Java 24) blocking inside `synchronized` no longer pins the carrier.
+
+---
+
+## 🧭 The mental model — three problems people call "thread safety"
+
+Most concurrency confusion comes from treating one word as if it meant one thing. There are **three separate problems**, and each tool solves a different subset:
+
+| Problem | The question | Solved by |
+|---|---|---|
+| **Visibility** | Does another thread ever *see* my write? | `volatile`, `synchronized`, atomics |
+| **Atomicity** | Can my read-modify-write be interrupted halfway? | `synchronized`, atomics, locks |
+| **Ordering** | Can the compiler or CPU reorder my statements? | `volatile`, `synchronized` |
+
+Read that table again, because it produces the single most-tested fact in the module: **`volatile` fixes visibility and ordering but not atomicity.** So `count++` on a volatile field is still broken — it's three operations (read, add, write), and another thread can land between any two of them.
+
+> `volatile` = "everyone sees the latest value."
+> `synchronized`/atomic = "and only one of you may change it at a time."
+
+**Virtual threads change the economics, not the rules.** A virtual thread is cheap enough to create one per task and let it block — but two of them racing on a shared counter corrupt it exactly like platform threads would. Every rule above still applies.
+
+## 🔬 Worked trace — why `count++` loses updates
+
+Two threads, one shared `int count = 0`, each incrementing once. You expect `2`.
+
+| Time | Thread A | Thread B | `count` |
+|---|---|---|---|
+| 1 | reads `0` | | 0 |
+| 2 | | reads `0` | 0 |
+| 3 | computes `0 + 1` | | 0 |
+| 4 | | computes `0 + 1` | 0 |
+| 5 | writes `1` | | 1 |
+| 6 | | writes `1` | **1** |
+
+Two increments, one result. Marking `count` as `volatile` fixes *nothing here* — both threads read a perfectly up-to-date `0`. The problem is that the read and the write are separable at all.
+
+Three fixes, in order of preference:
+
+```java
+var count = new AtomicInteger();     count.incrementAndGet();   // atomic, lock-free
+synchronized (lock) { count++; }                                // atomic, blocking
+var adder = new LongAdder();         adder.increment();         // atomic, high contention
+```
+
+## 🔬 Worked trace — the two locks are not the same lock
+
+```java
+class Counter {
+    synchronized void instanceMethod() { }        // locks  this
+    static synchronized void staticMethod() { }   // locks  Counter.class
+}
+```
+
+These are **different monitors**. One thread inside `instanceMethod` does not block another thread entering `staticMethod`. If both touch the same static field, you have a race that *looks* fully synchronised.
+
+## 🔬 Worked trace — `get()` unwraps twice
+
+```java
+Future<Integer> f = executor.submit(() -> { throw new IllegalStateException("boom"); });
+try {
+    f.get();
+} catch (ExecutionException e) {
+    System.out.println(e.getCause());   // java.lang.IllegalStateException: boom
+}
+```
+
+The task's exception is **wrapped**. `catch (IllegalStateException)` around `get()` never fires — you must catch `ExecutionException` and call `getCause()`. `get()` also throws `InterruptedException`, which is why it needs two catches or a multi-catch.
+
+## 🎭 Why the wrong answer looks right
+
+| Tempting belief | Why it's tempting | The truth |
+|---|---|---|
+| "`volatile` makes `i++` safe" | It's *the* concurrency keyword | It guarantees visibility and ordering, never atomicity |
+| "Virtual threads should be pooled" | Pooling is what you do with threads | An anti-pattern. They're cheap — create one per task. Pool the *scarce* resource instead |
+| "Virtual threads can be non-daemon" | Platform threads can | They are **always** daemon and won't keep the JVM alive |
+| "`shutdown()` stops running tasks" | The name says shutdown | It stops accepting new work and lets the queue drain. `shutdownNow()` interrupts. Neither blocks — that's `awaitTermination` |
+| "`ScopedValue` replaces `ThreadLocal.set`" | It replaces `ThreadLocal` | There is **no** `set()`. You bind for a scope with `where(K, v).run(...)`. Immutability is the point |
+| "`synchronized` still pins virtual threads" | It was true and widely written about | **JEP 491 fixed it in Java 24.** The ReentrantLock workaround is obsolete |
+| "`Collections.synchronizedMap` makes everything safe" | Every method is synchronised | Each *call* is atomic; a `get`-then-`put` pair is not. Use `ConcurrentHashMap.merge`/`compute` |
+| "Parallel streams are faster" | More cores | Splitting and merging cost real time, and a non-associative accumulator gives a *wrong* answer, not a slow one |
+| "`start()` twice runs it twice" | It's just a method | `IllegalThreadStateException`. A `Thread` object is single-use |
+| "Catching `InterruptedException` and ignoring it is fine" | The compiler is satisfied | The throw **cleared** the interrupt flag. Either rethrow or call `Thread.currentThread().interrupt()` |
+
+## 🔁 Recall ladder
+
+1. Name the three problems "thread safety" refers to, and which tool solves which.
+2. Draw the interleaving that makes `count++` lose an update.
+3. Why doesn't `volatile` fix it?
+4. Which monitor does a `static synchronized` method acquire? And a non-static one?
+5. A task throws. What does `get()` throw, and how do you reach the original?
+6. `shutdown` vs `shutdownNow` vs `close` vs `awaitTermination` — one sentence each.
+7. Are virtual threads daemon or non-daemon? Can you change it?
+8. Why does `ScopedValue` have no setter?
+9. What changed in Java 24 regarding `synchronized`?
+10. Give the one property a `reduce` accumulator must have to be correct in parallel, and a counterexample that lacks it.

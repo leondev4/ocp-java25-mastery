@@ -146,14 +146,3 @@ Can System.gc() force collection?	No — it is only a request/hint to the JVM.
 Why is == safe for enum constants?	Each constant is a single static instance (a true singleton).
 Do generics exist at runtime?	No — type erasure: the heap object is raw; List<String> is compile-time only.
 Where do virtual thread stacks live?	On the heap — that's why millions are cheap; they mount onto few carrier threads.
-Are java.time objects mutable?	No — immutable like String; plus/minus/with return NEW objects (discarded if unassigned).
-Period vs Duration?	Period = date units (Y/M/D); Duration = time units (H/M/S/ns). Wrong pairing → UnsupportedTemporalTypeException.
-Period.ofYears(2).ofMonths(3) equals?	P3M — static factories don't chain; only the last call counts.
-Spring-forward day length? Fall-back day?	23 hours; 25 hours.
-Adding 01:30 + 1h across the US spring-forward gap gives?	03:30 — nonexistent times are skipped; offset shifts (−5→−4 in NY).
-Which java.time types know about DST?	Only ZonedDateTime (via ZoneId rules). Instant = pure UTC; LocalDateTime = no zone.
-Period.ofDays(1) vs Duration.ofHours(24) across a DST change?	Period keeps the same local CLOCK time; Duration keeps ELAPSED time — they differ by 1h.
-Pattern letters M vs m, H vs h?	M=month, m=minute; H=0–23, h=1–12 (needs a for AM/PM).
-LocalDate.of(2026,13,1)?	DateTimeException at runtime (months are 1-based; validation is runtime).
-LocalDate Jan 31 plusMonths(1)?	Feb 28/29 — smart truncation to the last valid day, no exception.
-Real 1Z0-831 exam duration and pace?	120 minutes for 50 questions ≈ 2:24/question — but questions are long; train stamina.

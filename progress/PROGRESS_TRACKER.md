@@ -1,7 +1,5 @@
 # 📊 Progress Tracker — OCP Java 25 (1Z0-831)
 
-> 💡 Prefer the digital version: [interactive/dashboard.html](../interactive/dashboard.html) tracks all of this automatically (reviews auto-scheduled, XP, chrono). This file is the paper fallback.
-
 > Fill this in honestly. The tracker + Error Journal ARE your exam-week revision material.
 
 ## Module completion (a module is done only when ALL boxes are ✅)
@@ -19,7 +17,6 @@
 | 09 I/O & NIO | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
 | 10 Modules/Localization | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
 | 11 Java 25 Delta | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
-| 12 Date-Time API | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ |
 
 ## Mock exam log
 

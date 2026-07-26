@@ -95,3 +95,97 @@ flowchart TB
 ```
 
 Requested locale first, then the DEFAULT locale, then the base file — the default locale beats the base file. Once found, individual KEYS may still fall back up that bundle's parent chain.
+
+---
+
+## 🧭 The mental model — two systems that both answer "who can see what"
+
+This module bolts together two topics that share one theme: **making access explicit instead of accidental.**
+
+**Modules** answer it for code. Before JPMS, `public` meant "visible to the entire classpath" — you could not have a type that was public for your own use but hidden from consumers. A module declares:
+
+- `requires X` — *I need X.* (`transitive` = and so does anyone who needs me. `static` = at compile time only.)
+- `exports P` — *others may use package P at compile time and runtime.*
+- `opens P` — *others may reflect deeply into P at runtime.* A different, stronger, narrower grant.
+- `uses` / `provides ... with` — service discovery without a compile-time dependency.
+
+**Localization** answers it for text. Never concatenate user-facing strings; look them up by key, and let the bundle chain decide which translation applies.
+
+> **`requires` is what I need, `exports` is what you may call, `opens` is what you may reflect on.** Three different questions, three different keywords.
+
+## 🔬 Worked trace — bundle resolution, step by step
+
+Files present: `Msg.properties`, `Msg_fr.properties`, `Msg_fr_CA.properties`.
+Default locale: `en_US`. Request: `Locale.of("fr", "FR")`, key `greeting`.
+
+| Step | Candidate | Outcome |
+|---|---|---|
+| 1 | `Msg_fr_FR` | does not exist — continue |
+| 2 | `Msg_fr` | **found.** This becomes the bundle |
+| 3 | key lookup in `Msg_fr` | if present, done |
+| 4 | parent `Msg` | consulted only if the key is missing above |
+| 5 | still missing | `MissingResourceException` |
+
+Two facts the exam leans on:
+
+- **`Msg_fr_CA` is never consulted.** Canada is not France; the chain narrows by stripping components, it does not search sideways.
+- **The bundle chain and the key chain are different searches.** Java first picks the most specific *bundle*, then walks *up its parents* looking for the key. A bundle only needs to contain what it overrides.
+
+## 🔬 Worked trace — `exports` versus `opens`
+
+```java
+module com.app {
+    exports com.app.api;      // compile + runtime access to public types
+    opens   com.app.model;    // deep reflection at runtime, no compile access
+}
+```
+
+| Attempt | `com.app.api` | `com.app.model` |
+|---|---|---|
+| `new ApiType()` from another module | ✔ | ✘ not exported |
+| `Class.forName("com.app.model.User")` | ✔ | ✔ |
+| `field.setAccessible(true)` on a private field | ✘ | ✔ |
+
+`opens` is what serialization libraries and dependency-injection frameworks need. It is deliberately *not* implied by `exports`, because letting anyone reflect into your internals is a much larger promise than letting them call your API.
+
+## 🔬 Worked trace — pattern letters that look alike
+
+```java
+LocalDateTime t = LocalDateTime.of(2026, 7, 26, 14, 5, 9);
+
+"yyyy-MM-dd"      → 2026-07-26      // M = month
+"yyyy-mm-dd"      → 2026-05-26      // m = MINUTE. silently wrong
+"HH:mm:ss"        → 14:05:09        // H = 24-hour
+"hh:mm:ss"        → 02:05:09        // h = 12-hour, no am/pm marker
+```
+
+Nothing throws. You get a plausible-looking wrong answer, which is exactly why it makes a good exam question. `M` month, `m` minute, `s` second, `S` fraction, `H` 24-hour, `h` 12-hour, `d` day-of-month, `D` day-of-year.
+
+Applying a *time* pattern to a `LocalDate` **does** throw — `UnsupportedTemporalTypeException` — because the field genuinely does not exist.
+
+## 🎭 Why the wrong answer looks right
+
+| Tempting belief | Why it's tempting | The truth |
+|---|---|---|
+| "`exports` lets frameworks reflect into my package" | It grants access | Only `opens` permits deep reflection. Different grant |
+| "`requires` is inherited by my consumers" | Dependencies usually cascade | Only `requires transitive` is passed on |
+| "`requires static` means a static import" | The keyword is overloaded elsewhere | Compile-time-only dependency, optional at runtime |
+| "A missing key returns null" | Map-like APIs do | `getString` throws `MissingResourceException` |
+| "`Msg_fr_CA` might answer a `fr_FR` request" | Both are French | Never. The chain strips components; it doesn't search siblings |
+| "`new Locale("fr","FR")` is current practice" | It's in every old tutorial | Deprecated in Java 19. Use `Locale.of` or `Locale.Builder` |
+| "A plain JAR can't go on the module path" | It has no module-info | It becomes an **automatic module** — reads everything, exports everything |
+| "Module names may contain hyphens" | Artifact names do | Dot-separated Java identifiers only |
+| "`mm` means month" | `MM` does | `m` is minute. Silently produces a wrong date |
+
+## 🔁 Recall ladder
+
+1. Three directives that control visibility, and the exact question each answers.
+2. What does `requires transitive` change for a consumer of your module?
+3. What does `requires static` mean at compile time and at runtime?
+4. Walk the bundle search for `fr_FR` given `Msg`, `Msg_fr`, `Msg_fr_CA`.
+5. Why is a key missing from `Msg_fr` not automatically an error?
+6. Which directive pair wires a `ServiceLoader`, and which side declares which?
+7. What is an automatic module and what does it read and export?
+8. `M`, `m`, `H`, `h`, `s`, `S` — one meaning each.
+9. Which formatting mistakes throw, and which silently produce a wrong string?
+10. Name the modern replacement for the `Locale` constructors.

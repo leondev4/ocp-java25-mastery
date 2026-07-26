@@ -117,3 +117,91 @@ flowchart LR
 ```
 
 **Wrapper cache** (−128…127): `Integer a = 127, b = 127;` → both arrows hit the SAME cached object (`==` true). At 128 → two objects (`==` false). Same picture as the String pool — one shared object vs fresh allocations.
+
+---
+
+## 🧭 The mental model — three rules that generate the rest
+
+Almost every data-type trap on this exam is one of three rules firing:
+
+1. **Arithmetic promotes to `int`.** Any operation on `byte`, `short` or `char` computes in `int`. That single rule explains why `b = b * 2` fails, why `'a' + 'b'` prints 195, and why compound operators are special (they hide a cast).
+2. **Everything here is immutable.** `String`, all wrapper types, and every `java.time` type. Their "modifying" methods return a *new* object. Ignore the return value and nothing happens — silently.
+3. **`==` compares references for objects.** Never contents. The `Integer` cache and the String pool make this *sometimes* look like it works, which is worse than it never working.
+
+> **Promote, return, reference.** If you can name which of the three a question is testing, you have already narrowed the answer to one or two options.
+
+## 🔬 Worked trace — the promotion ladder
+
+```java
+byte  b = 10;
+short s = 20;
+char  c = 'A';
+
+int r1 = b + s;      // ✔ both promote to int
+byte r2 = b + b;     // ✘ int cannot narrow implicitly
+byte r3 = 10 + 10;   // ✔ compile-time CONSTANT that fits
+b += 300;            // ✔ compiles! implicit cast — and overflows silently
+```
+
+| Line | What the compiler sees | Result |
+|---|---|---|
+| `b + s` | byte→int, short→int, result int | fine, assigned to int |
+| `b + b` | int result, assigned to byte | **error: possible lossy conversion** |
+| `10 + 10` | constant folded to 20, fits in byte | fine — constants are special |
+| `b += 300` | expands to `b = (byte)(b + 300)` | compiles, wraps to **54** |
+
+The last line is the one that costs marks. Compound assignment always inserts the cast, so it never fails to compile — it just quietly gives you the wrong number.
+
+## 🔬 Worked trace — the reference traps in one table
+
+```java
+Integer a = 127, b = 127;      a == b  // true   — cache
+Integer c = 128, d = 128;      c == d  // false  — outside cache
+String  e = "x", f = "x";      e == f  // true   — pooled
+String  g = new String("x");   e == g  // false  — forced new object
+String  h = "x".intern();      e == h  // true   — back to the pool
+String  i = "j" + "ava";       i == "java"  // true  — constant folded
+String  j = e + "y";           j == "xy"    // false — built at runtime
+```
+
+The pattern: **anything the compiler can compute at compile time gets pooled; anything built at runtime is a new object.** The `Integer` cache covers −128 to 127 only.
+
+## 🔬 Worked trace — java.time is immutable *and* the factories are static
+
+```java
+LocalDate d = LocalDate.of(2026, 1, 31);
+d.plusMonths(1);                      // result thrown away — d unchanged
+d = d.plusMonths(1);                  // 2026-02-28, clamped not rolled over
+
+Period p = Period.ofYears(2).ofMonths(3);   // P3M — NOT 2 years 3 months
+Period q = Period.of(2, 3, 0);              // P2Y3M — the correct form
+```
+
+`ofYears` and `ofMonths` are both **static factories**. Chaining calls the second one on the *class*, silently discarding the first. It compiles, runs, and gives you the wrong period.
+
+## 🎭 Why the wrong answer looks right
+
+| Tempting belief | Why it's tempting | The truth |
+|---|---|---|
+| "`b = b + 1` and `b += 1` are the same" | They look identical | Compound assignment hides a narrowing cast. One fails to compile, the other overflows silently |
+| "`Integer == Integer` works" | It does for small values | Only inside the −128..127 cache. Use `equals` |
+| "`s.trim()` cleans the string" | It returns the cleaned value | It returns a NEW string. Assign it, or nothing happens |
+| "`Math.round(-2.5)` is −3" | Rounding away from zero feels right | **−2.** It adds 0.5 then floors, so half rounds toward positive infinity |
+| "`long l = 3.0;` compiles" | 3.0 is obviously a whole number | The literal is a `double`. Narrowing needs a cast |
+| "`Long l = 5;` compiles" | int fits in Long easily | Widening AND boxing cannot combine. Use `5L` |
+| "`LocalDate.of(2026,2,30)` fails to compile" | The date is obviously invalid | Compiles fine, throws `DateTimeException` at **runtime** |
+| "`"""hi"""` is a valid text block" | It's short and looks fine | The opening delimiter must be followed by a line terminator |
+| "`isEmpty()` and `isBlank()` are synonyms" | Both sound like "nothing there" | `"  ".isEmpty()` is false; `"  ".isBlank()` is true |
+
+## 🔁 Recall ladder
+
+1. State the promotion rule in one sentence, then use it to explain `'a' + 'b'`.
+2. Why does `b += 1` compile when `b = b + 1` doesn't?
+3. Give the exact bounds of the `Integer` cache and one line that proves it.
+4. Three ways to get two `String`s that are `equals` but not `==`.
+5. What do `1/0` and `1.0/0` each do?
+6. `Math.round` on 2.5 and −2.5 — both answers and the rule behind them.
+7. Why does `Period.ofYears(2).ofMonths(3)` lose the years?
+8. Which java.time type would you use for a duration in hours, and what happens if you apply it to a `LocalDate`?
+9. Name three things that must be true for a text block to compile.
+10. `Integer i = null; int j = i;` — what happens and exactly why?

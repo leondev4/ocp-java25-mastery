@@ -11,7 +11,8 @@ void main() {
 ```
 Rules:
 - No class declaration needed — the compiler wraps it in an implicit final class.
-- `main` can be: instance method, no args or `String[] args`, any of void/int? → NO: must be void or... exam-safe answer: `void main()` / `void main(String[] args)`, static or instance. Selection priority: `static void main(String[])` → `static void main()` → instance `main(String[])` → instance `main()`.
+- **`main` must return `void`.** It may be `static` or an instance method, and may take `String[] args` or no parameters at all. That gives four legal shapes: `static void main(String[])`, `static void main()`, `void main(String[])`, `void main()`.
+- **Selection order** when more than one candidate exists: a method taking `String[]` is preferred over the no-arg form, and `static` is preferred over instance. If an instance `main` is selected, the class must have a non-private no-arg constructor — the launcher instantiates it first.
 - Implicit class can't be referenced by name, lives in the unnamed package, can have fields & other methods.
 - Implicitly imports `java.lang.IO`'s static methods conceptually available as `IO.println/print/readln` AND implicitly `import module java.base` (so List, Map, Files… work without imports!).
 - Run directly: `java Hello.java`.
@@ -79,3 +80,129 @@ flowchart LR
     L["launcher picks main:"] --> O["1️⃣ main(String[]) → 2️⃣ main()<br/>static or instance (instance ⇒ no-arg ctor)"]
     style F fill:#14432e,stroke:#37c871,color:#fff
 ```
+
+---
+
+## 🧭 The mental model — Java 25 removed ceremony, not rules
+
+Every delta feature between 21 and 25 does one of two things: **removes ceremony that was never load-bearing**, or **closes a hole the language had left open**. Sorting them that way makes the list memorable instead of arbitrary.
+
+**Removed ceremony** — the code does the same thing with less of it:
+
+- Compact source files and instance `main` — the class wrapper was never telling you anything.
+- `java.lang.IO` — `System.out.println` is three lookups to print a line.
+- `import module java.base` — twenty import lines that never vary.
+- Unnamed variables `_` — naming a thing you promise not to use is noise.
+- Markdown doc comments `///` — HTML in comments was an accident of 1997.
+
+**Closed holes** — things that were genuinely impossible before:
+
+- Flexible constructor bodies: you could not validate an argument before `super()` ran.
+- Scoped values: `ThreadLocal` was mutable and leaked; there was no immutable, bounded-lifetime equivalent.
+- Stream gatherers: you could write custom *terminal* operations with `Collector`, but not custom *intermediate* ones.
+- Virtual threads unpinned (JEP 491): `synchronized` used to pin a virtual thread to its carrier, so the advice was to rewrite it as `ReentrantLock`.
+
+> **Ceremony removed, or a hole closed.** Put each feature in one bucket and the delta stops being a list to memorise.
+
+## 🔬 Worked trace — what the compiler does to a compact file
+
+You write:
+
+```java
+void main() {
+    var names = List.of("a", "b");
+    IO.println(names.size());
+}
+```
+
+The compiler treats it as roughly:
+
+```java
+import module java.base;                  // implicit
+final class <unnamed> {                   // implicit, unnameable
+    void main() {                         // instance method
+        var names = List.of("a", "b");
+        java.lang.IO.println(names.size());
+    }
+}
+```
+
+Three consequences the exam tests:
+
+1. `List` needs no import — `java.util` is exported by `java.base`.
+2. The class has **no usable name**, so no other file can refer to it.
+3. Since `main` is an instance method, the launcher instantiates the class first — which requires a non-private no-arg constructor. The implicit one qualifies.
+
+**Selection order** when several candidates exist: a `main` taking `String[]` beats a no-arg one, and `static` beats instance.
+
+## 🔬 Worked trace — the constructor prologue
+
+```java
+class Positive extends Number {
+    private final int v;
+
+    Positive(int v) {
+        if (v <= 0) throw new IllegalArgumentException("must be positive");  // ① prologue
+        this.v = v;                                                          // ② own field: allowed
+        super();                                                             // ③ superclass runs LAST
+    }
+}
+```
+
+| Allowed in the prologue | Forbidden in the prologue |
+|---|---|
+| Validating parameters and throwing | Reading `this` or any inherited field |
+| Assigning **this class's own** fields | Calling an instance method |
+| Local variables, static calls | Passing `this` to anything |
+
+The payoff: `new Positive(-1)` throws **before** the superclass constructor executes at all. Previously the only options were validating inside the `super(...)` argument list — awkward — or after construction, by which point a partially built object already existed.
+
+## 🔬 Worked trace — gatherers versus everything else
+
+```java
+var in = Stream.of(1, 2, 3);
+
+in.reduce(0, Integer::sum);                                      // 6      TERMINAL
+Stream.of(1,2,3).gather(Gatherers.fold(() -> 0, Integer::sum));  // [6]    INTERMEDIATE
+Stream.of(1,2,3).gather(Gatherers.scan(() -> 0, Integer::sum));  // [1,3,6] INTERMEDIATE
+```
+
+`reduce` ends the pipeline and hands you a value. `fold` produces a one-element **stream** you can keep chaining from. `scan` emits a running total per input.
+
+The five built-ins worth knowing cold:
+
+| Gatherer | Effect on element count |
+|---|---|
+| `windowFixed(n)` | groups of n, final window may be partial |
+| `windowSliding(n)` | overlapping windows, count − n + 1 of them |
+| `fold(seed, fn)` | collapses to exactly **one** |
+| `scan(seed, fn)` | one output per input |
+| `mapConcurrent(n, fn)` | same count, mapped on virtual threads, order preserved |
+
+## 🎭 Why the wrong answer looks right
+
+| Tempting belief | Why it's tempting | The truth |
+|---|---|---|
+| "Compact files still need an import for `List`" | Every other file does | `import module java.base` is implicit |
+| "A compact file's class can be referenced elsewhere" | It's a real class | It has no usable name — deliberately |
+| "`main` may return `int`" | C does it | Must be `void`. Static or instance, `String[]` or no args |
+| "`_` can be used anywhere" | It's just an identifier | Locals with initialisers, enhanced-for, try-with-resources, catch, lambda params, patterns. **Not** fields or ordinary method parameters |
+| "`_` can be read back" | It's a variable | Reading it is a compile error. That's the point |
+| "You may read `this` before `super()`" | You're inside the constructor | Forbidden — the object isn't initialised. Own-field assignment is allowed |
+| "`gather` is terminal like `collect`" | They pair up conceptually | **Intermediate.** You can keep chaining |
+| "Structured concurrency is final in 25" | It's been around a while | Still **preview**. Gatherers, scoped values, compact files, module imports and flexible constructors are final |
+| "`synchronized` still pins virtual threads" | It was true and widely written up | Fixed by JEP 491 in Java 24 |
+| "Records and sealed types are Java 25 features" | They feel new | Final by Java **21** — baseline, not delta |
+
+## 🔁 Recall ladder
+
+1. Sort every 22→25 feature into "ceremony removed" or "hole closed."
+2. What three things does the compiler add to a compact source file?
+3. State the `main` selection order and the constructor requirement for an instance `main`.
+4. What may and may not appear before `super()`?
+5. Name the six legal positions for `_`, and two illegal ones.
+6. Why does `ScopedValue` have no setter?
+7. `fold` versus `scan` versus `reduce` — element counts and which are terminal.
+8. Which gatherer preserves order while running concurrently?
+9. Which Java 22–25 features are still preview?
+10. What did JEP 491 change, and which piece of common advice did it make obsolete?

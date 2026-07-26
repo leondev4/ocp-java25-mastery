@@ -1,4 +1,4 @@
-# Mock Exam 01 — 25 Questions / 60 Minutes
+# Mock Exam 01 — 25 Questions / 45 Minutes
 
 > Simulates the real 1Z0-831 style. Timer on. No notes. Mark guesses with ⭐. Answers with full explanations at the bottom — review them ALL, even the ones you got right.
 
