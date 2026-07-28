@@ -102,7 +102,7 @@ flowchart LR
         end
     end
     A --> P1
-    A -.s.toUpperCase() result IGNORED unless assigned.-> P2
+    A -.-> P2
     style POOL fill:#241f0c,stroke:#ffd54d,color:#fff
     style STACK fill:#0d1b2a,stroke:#4da3ff,color:#fff
 ```

@@ -10,8 +10,8 @@ record Circle(double r) implements Shape {
 record Rect(double w, double h) implements Shape {}
 non-sealed class Unknown implements Shape {}
 
-enum Planet {
-    MERCURY(3.30e23), EARTH(5.97e24);
+enum Planet { // final by default, can implemnts interface but cannot extends a class
+    MERCURY(3.30e23), EARTH(5.97e24);            //compulsory ";" and first constants when write more code
     private final double mass;
     Planet(double m) { mass = m; }             // implicitly private
     double mass() { return mass; }
@@ -29,7 +29,7 @@ void main() {
     Shape s = new Rect(3, 4);
     double area = switch (s) {
         case Circle(double r)     -> Math.PI * r * r;
-        case Rect(double w, var h)-> w * h;
+        case Rect(double w, var h)-> w * h;    // watchout!!! it is valid mix var with type
         case Unknown _            -> 0;        // unnamed pattern variable
     };
     IO.println("area=" + area);
